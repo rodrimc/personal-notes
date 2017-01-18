@@ -1,0 +1,3 @@
+[submodule "ceu-semantics"]
+	path = ceu-semantics
+	url = ./ceu-semantics/
