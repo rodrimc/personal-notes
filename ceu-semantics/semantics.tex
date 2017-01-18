@@ -1,0 +1,145 @@
+\documentclass[9pt]{article}
+
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{array}
+\usepackage{syntax}
+\usepackage{semantic}
+\usepackage[T1]{fontenc}
+\usepackage{amsfonts}
+
+
+\setlength{\abovedisplayskip}{2pt}
+\setlength{\belowdisplayskip}{2pt}
+
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+\newcommand{\xra}[1]{\xrightarrow{#1}}
+
+\begin{document}
+
+\section{Formal Semantics}
+
+\subsection{Abstract Syntax}
+\label{sub:syntax}
+
+\begin{itemize}
+  \item Simple rules
+\end{itemize}
+
+\begin{grammar}
+<p> ::= mem(varid)                   \hfill (memory access to `varid')
+\alt await(evtid)                    \hfill (await event `evtid')
+\alt emit(evtid)                     \hfill (emit event `evtid')
+\alt break                           \hfill (escape)
+\end{grammar}
+
+\begin{itemize}
+  \item Compound expressions 
+\end{itemize}
+
+\begin{grammar}
+<p> ::= if mem(varid) then p else p  \hfill (conditional) 
+\alt p ; p                           \hfill (sequence)
+\alt loop p                          \hfill (loop)
+\alt p and p                         \hfill (par/and)
+\alt p or p                          \hfill (par/or)
+\end{grammar}
+
+\begin{itemize}
+  \item Semantic rules 
+\end{itemize}
+
+\begin{grammar}
+<p> ::= awaiting(evtid, n)           \hfill (awaiting event `evtid' since sequence number `n')
+\alt emitting(n)                     \hfill (emitting on stack level `n')
+\alt p @ loop p                      \hfill (unwinded loop)
+\alt fin p                           \hfill (finalization)
+
+\end{grammar}
+
+\subsection{Operational Semantics}
+\label{sec:operational}
+
+\textbf{Relation-inner}
+\[
+  {<S,p> \xra{n} <S',p'>}
+\]
+where:
+\[
+  S,S' \in evtid   \tag*{(sequence of event identifiers)}
+\]
+\[
+  p,p' \in P       \tag*{(programs following the abstract syntax)}
+\]
+\[
+  n \in \mathbb{N} \tag*{(unique identifier for the reaction chain)}
+\]
+
+\textbf{Rules:}
+%await
+\[
+  \la S, await(evtid)\ra \xra{n} \la S, awaiting(id, n+1)\ra \tag*{(await)}
+\]
+
+~
+%awake
+\[
+  \la evt:S, awaiting(evtid, m)\ra \xra{n} \la id:S, nop\ra, M < n \tag*{(awake)}
+\]
+
+~
+%emit
+\[
+  \la S, emit(evtid)\ra \xra{n} \la id:S, emitting(|S|)\ra \tag*{(emit)}
+\]
+
+~
+%pop
+\[
+  \la S, emitting(|S|)\ra \xra{n} \la S, nop)\ra \tag*{(pop)}
+\]
+
+~
+%break
+\[
+  \la S, break \ra \xra{n} \la S, nop\ra
+    \tag *{break}
+\]
+
+~
+
+\textbf{Compound expressions:}
+%if-true
+\[
+  \inference{val(varid,n)\ne0}
+            {\la S, \textrm{if mem(varid) then p else q}\ra \xra{n} \la S, p\ra}
+            \tag*{if-true}
+\]
+
+%if-false
+\[
+  \inference{val(varid,n)=0}
+            {\la S, \textrm{if mem(varid) then p else q}\ra \xra{n} \la S, q\ra}
+            \tag*{if-false}
+\]
+
+%seq-adv
+\[
+  \inference{\la S, p\ra \xra{n} \la S', p'\ra}
+            {\la S, (p ; q)\ra \xra{n} \la S', (p' ; q)\ra}
+            \tag*{seq-adv}
+\]
+
+%seq-nop
+\[
+  \la S, (nop ; q)\ra \xra{n} \la S, q\ra
+    \tag*{seq-nop}
+\]
+
+%break-seq
+\[
+  \la S, (break ; p)\ra \xra{n} \la S, break\ra
+    \tag*{break-seq}
+\]
+\end{document}
