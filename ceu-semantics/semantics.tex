@@ -14,7 +14,8 @@
 
 \newcommand{\la}{\langle}
 \newcommand{\ra}{\rangle}
-\newcommand{\xra}[1]{\xrightarrow{#1}}
+\newcommand{\inner}{\xrightarrow{n}}
+\newcommand{\tuple}[1]{\langle#1\rangle}
 
 \begin{document}
 
@@ -31,7 +32,7 @@
 <p> ::= mem(varid)                   \hfill (memory access to `varid')
 \alt await(evtid)                    \hfill (await event `evtid')
 \alt emit(evtid)                     \hfill (emit event `evtid')
-\alt break                           \hfill (escape)
+\alt nop                             \hfill (no operation)
 \end{grammar}
 
 \begin{itemize}
@@ -42,8 +43,9 @@
 <p> ::= if mem(varid) then p else p  \hfill (conditional) 
 \alt p ; p                           \hfill (sequence)
 \alt loop p                          \hfill (loop)
-\alt p and p                         \hfill (par/and)
-\alt p or p                          \hfill (par/or)
+\alt loop p ; break ; p              \hfill (loop with break)
+\alt p AND p                         \hfill (par/and)
+\alt p OR p                          \hfill (par/or)
 \end{grammar}
 
 \begin{itemize}
@@ -54,6 +56,7 @@
 <p> ::= awaiting(evtid, n)           \hfill (awaiting event `evtid' since sequence number `n')
 \alt emitting(n)                     \hfill (emitting on stack level `n')
 \alt p @ loop p                      \hfill (unwinded loop)
+\alt p $\bullet$ loop p              \hfill (unwinded loop within compositions)
 \alt fin p                           \hfill (finalization)
 
 \end{grammar}
@@ -63,83 +66,244 @@
 
 \textbf{Relation-inner}
 \[
-  {<S,p> \xra{n} <S',p'>}
+  {<S,p> \inner <S',p'>}
 \]
 where:
 \[
-  S,S' \in evtid   \tag*{(sequence of event identifiers)}
+  S,S' \in evtid   \tag{sequence of event identifiers}
 \]
 \[
-  p,p' \in P       \tag*{(programs following the abstract syntax)}
+  p,p' \in P       \tag{programs following the abstract syntax}
 \]
 \[
-  n \in \mathbb{N} \tag*{(unique identifier for the reaction chain)}
+  n \in \mathbb{N} \tag{unique identifier for the reaction chain}
 \]
 
 \textbf{Rules:}
+
+%mem
+\[
+  \tuple{S, mem(id)} \inner \tuple{S, nop}
+  \tag{mem}
+\]
+
 %await
 \[
-  \la S, await(evtid)\ra \xra{n} \la S, awaiting(id, n+1)\ra \tag*{(await)}
+  \tuple{S, await(id)} \inner \tuple{S, awaiting(id, n+1)} 
+  \tag{await}
 \]
 
 ~
 %awake
 \[
-  \la evt:S, awaiting(evtid, m)\ra \xra{n} \la id:S, nop\ra, M < n \tag*{(awake)}
+  \tuple{id:S, awaiting(id, m)} \inner \tuple{id:S, nop}, M < n 
+  \tag{awake}
 \]
 
 ~
 %emit
 \[
-  \la S, emit(evtid)\ra \xra{n} \la id:S, emitting(|S|)\ra \tag*{(emit)}
+  \tuple{S, emit(id)} \inner \tuple{id:S, emitting(|S|)} 
+  \tag{emit}
 \]
 
 ~
 %pop
 \[
-  \la S, emitting(|S|)\ra \xra{n} \la S, nop)\ra \tag*{(pop)}
+  \tuple{S, emitting(|S|)} \inner \tuple{S, nop)} 
+  \tag{pop}
 \]
 
 ~
 %break
-\[
-  \la S, break \ra \xra{n} \la S, nop\ra
-    \tag *{break}
-\]
+% \[
+%   \tuple{ S, break } \inner \tuple{ S, nop}
+%     \tag *{break}
+% \]
 
 ~
 
 \textbf{Compound expressions:}
 %if-true
 \[
-  \inference{val(varid,n)\ne0}
-            {\la S, \textrm{if mem(varid) then p else q}\ra \xra{n} \la S, p\ra}
-            \tag*{if-true}
+  \inference{mem(varid,n)\ne0}
+            {\tuple{ S, \textrm{if mem(varid) then p else q}} \inner \tuple{ S, p}}
+            \tag{if-true}
 \]
 
+~
 %if-false
 \[
   \inference{val(varid,n)=0}
-            {\la S, \textrm{if mem(varid) then p else q}\ra \xra{n} \la S, q\ra}
-            \tag*{if-false}
+            {\tuple{ S, \textrm{if mem(varid) then p else q}} \inner \tuple{ S, q}}
+            \tag{if-false}
 \]
 
+~
 %seq-adv
 \[
-  \inference{\la S, p\ra \xra{n} \la S', p'\ra}
-            {\la S, (p ; q)\ra \xra{n} \la S', (p' ; q)\ra}
-            \tag*{seq-adv}
+  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
+            {\tuple{ S, (p ; q)} \inner \tuple{ S', (p' ; q)}}
+            \tag{seq-adv}
 \]
 
+~
 %seq-nop
 \[
-  \la S, (nop ; q)\ra \xra{n} \la S, q\ra
-    \tag*{seq-nop}
+  \tuple{ S, (nop ; q)} \inner \tuple{ S, q}
+    \tag{seq-nop}
 \]
 
+~
 %break-seq
+% \[
+%   \tuple{ S, (break ; p)} \inner \tuple{ S, break}
+%     \tag{break-seq}
+% \]
+
+%loop-expd
 \[
-  \la S, (break ; p)\ra \xra{n} \la S, break\ra
-    \tag*{break-seq}
+  \tuple{ S, (loop \;p)} \inner \tuple{ S, (p\; @\; loop \;p)} 
+    \tag{loop-expd}
+\]
+
+~
+%loop-adv
+\[
+  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
+            {\tuple{ S, (p \; @ \; loop\; q)} \inner \tuple{ S', (p' \; @ \; loop \; q)}}
+            \tag{loop-adv}
+\]
+
+~
+%loop-nop
+\[
+  \tuple{ S, (nop\; @ \; loop \; p)} \inner \tuple{ S, loop \; p}
+    \tag{loop-nop}
+\]
+
+~
+%loop-break
+\[
+  \tuple{ S, (break ; \; p \; \; @ \; loop \; p) } \inner \tuple{ S, nop}
+    \tag{loop-break}
+\]
+
+~
+%and-adv1
+\[
+  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
+            {\tuple{ S, (p \; AND \; q)} \inner \tuple{ S', (p' \; AND \; q)}}
+            \tag{and-adv1}
+\]
+
+~
+%and-adv2
+\[
+  \inference{isBlocked(n,S,p) & \tuple{ S, q} \inner \tuple{ S', q'}} 
+            {\tuple{ S, (p \; AND \; q)} \inner \tuple{ S', (p \; AND \; q'}}
+            \tag{and-adv2}
+\]
+
+~
+%and-adv-loop1
+\[
+  \tuple{S, (loop \; p \; AND \; q)} \inner \tuple{S, (p \; \bullet \; loop \; p \; AND  \; q)}
+  \tag{and-adv-loop1}
+\]
+
+~
+%and-adv-loop2
+\[
+  \inference {isBlocked(n,S,p)}
+             {\tuple{S, (p \; AND \; loop \; q)} \inner \tuple{S, (p \; AND \; q \; \bullet \; loop \; q)}}
+  \tag{and-adv-loop2}
+\]
+
+~
+%and-brk1
+\[
+  \tuple{S, (break; \; p \; \bullet \; loop \; p \; AND \; q)} \inner \tuple {S, (clear(q) ; nop)} 
+  \tag{and-brk1}
+\]
+
+~
+%and-brk2
+\[
+  \inference{isBlocked(n,S,p)}
+            {\tuple{S, (p \; AND \; break; \; q \; \bullet \; loop \; q)} \inner \tuple {S, (clear(p) ; nop)}} 
+  \tag{and-brk2}
+\]
+
+~
+%loop-comp-adv
+\[
+  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
+            {\tuple{ S, (p \; \bullet \; loop\; q)} \inner \tuple{ S', (p' \; \bullet \; loop \; q)}}
+            \tag{loop-comp-adv}
+\]
+
+~
+%loop-nop
+\[
+  \tuple{ S, (nop\; \bullet \; loop \; p)} \inner \tuple{ S, p \; \bullet \; loop \; p}
+    \tag{loop-comp-nop}
+\]
+
+~
+%loop-break
+\[
+  \tuple{ S, (break ; \; p \; \; \bullet \; loop \; p) } \inner \tuple{ S, break}
+    \tag{loop-comp-break}
+\]
+
+~
+%OR-adv1
+\[
+  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
+            {\tuple{ S, (p \; OR \; q)} \inner \tuple{ S', (p' \; OR \; q)}}
+            \tag{or-adv1}
+\]
+
+~
+%or-adv2
+\[
+  \inference{isBlocked(n,S,p) & \tuple{ S, q} \inner \tuple{ S', q'}} 
+            {\tuple{ S, (p \; OR \; q)} \inner \tuple{ S', (p \; OR \; q'}}
+            \tag{or-adv2}
+\]
+
+~
+%and-nop1
+\[
+  \tuple{ S, (nop \; AND \; q)} \inner \tuple{S, q}
+  \tag{and-nop1}
+\]
+
+~
+%and-nop2
+\[
+  \tuple{ S, (p \; AND \; nop)} \inner \tuple{S, p}
+  \tag{and-nop2}
+\]
+
+~
+%and-brk1
+\[
+  \tuple{ S, (break ; p \; @ \;loop \; p \; AND \; q)} \inner \tuple{S, clear(q)}
+  \tag{and-brk1}
+\]
+~
+%or-nop1
+\[
+  \tuple{ S, (nop \; OR \; q)} \inner \tuple{S, nop}
+  \tag{or-nop1}
+\]
+
+~
+%or-nop2
+\[
+  \tuple{ S, (p \; OR \; nop)} \inner \tuple{S, nop}
+  \tag{or-nop2}
 \]
 \end{document}
