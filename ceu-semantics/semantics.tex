@@ -1,309 +1,792 @@
-\documentclass[9pt]{article}
-
-\usepackage{mathtools}
-\usepackage{amsmath}
-\usepackage{array}
-\usepackage{syntax}
-\usepackage{semantic}
+\documentclass[11pt,a4paper,oneside]{amsart}
+\renewcommand{\datename}{}
+%---------------------------------------------------------------------------
+% TODO:
+% 1. Adicionar as instruções @\bot (erro) e @\top (terminação).
+% 2. Tornar a instrução 'fin p' bloqueante.
+% 3. Tentar tirar o número n da relação \step.
+% 4. Adicionar sequência de saída (emit p. eventos externos) à configuração.
+% 5. Completar as provas: determinismo, terminação, ordenação das
+%    finalizações.
+% 6. Definir relação de equivalência entre programas.
+%
+% FUTURO:
+% - Comparar as semânticas construtivas de Esterel.
+% - Colocar comportamentos (behaviors, instrução spawn) na semântica.
+%---------------------------------------------------------------------------
+\usepackage[protrusion=true]{microtype}
+\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsfonts}
+\usepackage{aliascnt}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,allcolors=black}
+\usepackage{mathtools}
+\usepackage[varg]{txfonts}
+\usepackage{xcolor}
+\usepackage[nameinlink]{cleveref}
 
+% To-do.
+\def\FIXME#1{{\color{red}{\textbf{#1}}}}
+\newenvironment{TODO}
+  {\bigskip\bgroup\color{red}\textbf{TODO}.~}
+  {\egroup\bigskip}
 
-\setlength{\abovedisplayskip}{2pt}
-\setlength{\belowdisplayskip}{2pt}
+% Theorems.
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}
+\Crefname{thm}{Theorem}{Theorems}
 
-\newcommand{\la}{\langle}
-\newcommand{\ra}{\rangle}
-\newcommand{\inner}{\xrightarrow{n}}
-\newcommand{\tuple}[1]{\langle#1\rangle}
+\theoremstyle{definition}
+\newaliascnt{defn}{thm}
+\newtheorem{defn}[defn]{Definition}
+\aliascntresetthe{defn}
+\Crefname{defn}{Definition}{Definitions}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+\Crefname{remark}{Remark}{Remarks}
+
+% Bussproofs.
+\usepackage{bussproofs}
+\def\labelSpacing{0em}
+\def\ScoreOverhang{0em}
+\def\defaultHypSeparation{\quad}
+\EnableBpAbbreviations
+
+% Auxiliary.
+\def\R#1{\hyperref[Rule:#1]{$R_\text{#1}$}}
+\def\Rtag#1{\tag{$R_\text{#1}$}}
+\newcommand{\E}{E_{events}}
+\newcommand{\Eint}{E_{internal}}
+\newcommand{\Eext}{E_{external}}
+
+% Symbols.
+\def\Ceu{C\'eu}
+\let\nil=\varepsilon
+\def\<#1>{\langle#1\rangle}
+\def\|#1|{\left|#1\right|}
+\def\val{\mathop{\mathit{val}}}
+\let\clear=\kappa
+\makeatletter
+\def\@raise#1#2#3{
+  \setbox0=\hbox{#1}%
+  \mathbin{%
+    \hbox to\wd0{%
+      \rlap{\box0}\hfill\raise#2\hbox{$\scriptstyle{#3}$}\hfill
+    }%
+  }%
+}
+
+\def\step#1{\@raise{$\to$}{1.1ex}{#1}}
+\def\stepx#1{\@raise{$\step{#1}$}{-.75ex}{\ast}}
+\def\eval#1{\@raise{$\Rightarrow$}{1.1ex}{#1}}
+\def\quadtext#1{\quad\text{#1}\quad}
+\def\Case#1.{[Case~#1]\enskip}
+\makeatother
+
+\title{An alternative operational semantics for Céu}
+% Abstract syntax.
+\makeatletter
+\def\@ceuop#1{\mathop{\texttt{#1}}}%
+\def\@ceubin#1{\mathbin{\texttt{#1}}}%
+\def\ceu#1{%
+  \bgroup
+  \def\Skip{\@ceuop{skip}}%
+  \def\Mem{\@ceuop{mem}}%
+  \def\Attr##1##2{##1=##2}%
+  \def\AwaitExt{\@ceuop{awaitExt}}%
+  \def\AwaitInt{\@ceuop{awaitInt}}%
+  \def\Emit{\@ceuop{emit}}%
+  \def\Break{\@ceuop{break}}%
+  \def\Ifelse##1##2##3{%
+    \@ceuop{if}%
+    \@ceuop{mem}(##1)%
+    \@ceuop{then}{##2}%
+    \@ceuop{else}{##3}}%
+  \def\Loop{\@ceuop{loop}}%
+  \def\And{\;\@ceubin{and}\;}%
+  \def\Or{\;\@ceubin{or}\;}%
+  \def\Fin{\@ceuop{fin}}%
+  \def\AwaitingExt{\@ceuop{@awaitingExt}}%
+  \def\AwaitingInt{\@ceuop{@awaitingInt}}%
+  \def\Emitting{\@ceuop{@emitting}}%
+  \def\Atloop{\@ceuop{@loop}}%
+  \def\Final{\@ceuop{$\otimes$}}%
+  \def\True{\@ceuop{$\top$}}%
+  \def\False{\@ceuop{$\bot$}}%
+  \ensuremath{#1}\ignorespaces
+  \egroup
+}
+\makeatother
 
 \begin{document}
+\maketitle
 
-\section{Formal Semantics}
+
+\section{Abstract syntax}
+\label{Section:syntax}
 
-\subsection{Abstract Syntax}
-\label{sub:syntax}
+The \emph{abstract syntax} of \Ceu\ programs is given by the following
+grammar:
+%%
+\bgroup
+\vskip\abovedisplayskip
+\noindent
+\hfil\hbox{%
+  \vtop{%
+    \tabskip0pt
+    \offinterlineskip
+    \halign{\strut\hfil$#$&$\;#$\hfil&\qquad#\hfil\cr
+      p\in{P}\Coloneqq
+          & \ceu{\Mem(v)}               & read variable~$v$\cr
+      \mid& \ceu{\Attr{v}{x}}           & write~$x$ to variable~$v$\cr
+      \mid& \ceu{\AwaitExt(E)}          & await external event~$E$\cr
+      \mid& \ceu{\AwaitInt(e)}          & await internal event~$e$\cr
+      \mid& \ceu{\Emit(e)}              & emit event~$e$\cr
+      \mid& \ceu{\Break}                & break innermost loop\cr
+      \mid& \ceu{\Ifelse{v}{p_1}{p_2}}  & conditional\cr
+      \mid& \ceu{p_1;p_2}               & sequence\cr
+      \mid& \ceu{\Loop p_1}             & repetition\cr
+      \mid& \ceu{p_1\And p_2}           & par/and\cr
+      \mid& \ceu{p_1\Or p_2}            & par/or\cr
+      \mid& \ceu{\Fin p_1}              & finalization\cr
+      \mid& \ceu{\AwaitingExt(E,n)}     & awaiting~$E$ since reaction~$n$\cr
+      \mid& \ceu{\AwaitingInt(e,n)}     & awaiting~$e$ since reaction~$n$\cr
+      \mid& \ceu{\Emitting(e,n)}        & emitting~$e$ on stack level~$n$\cr
+      \mid& \ceu{p_1\Atloop p_2}        & unwinded loop\cr
+      \mid& \ceu{\Skip}                 & nop\cr
+      \mid& \ceu{\Final}                & end of a program,\cr
+    }%
+  }%
+}\hfil%
+\vskip\belowdisplayskip
+\egroup
+%%
+\noindent where~$n\in{N}$ is an integer, $v\in{V}$~is a memory location
+(variable) identifier, $e\in{\Eint}$~is an internal event identifier, 
+$E\in{\Eext}$ is an external event identifier and~$p$, 
+$p_1$, $p_2\in{P}$ are programs.
+We use~``\ceu\Skip'' (do nothing) to represent a nop~(no operation) command.
+``\ceu{\Mem(v)}'' represents an access (read or write) to memory location $v$.
+
+\section{Operational Semantics: the Reaction step}
+\label{Section:step}
 
-\begin{itemize}
-  \item Simple rules
-\end{itemize}
+For our purposes, the \emph{state} of a \Ceu\ program within a reaction is
+represented by a stack $S$ of event identifiers and a memory $\sigma$. 
+$S$ is composed of an initial external event,~$S_0\in{\Eext}$, 
+followed by internal events, ~$e_1e_2\dots{}e_n\in{}\Eint^*$, where the 
+leftmost element is the top-of-stack.
+The set $\E=\Eext\cup \Eint$ defines all possible event
+identifiers \Ceu\ programs may react to.  The set $\Sigma$ of memory states of 
+\Ceu\ programs consists of all functions $\sigma:Mem\to v$, in which $Mem$ is 
+a memory address identifier and $v$ represents any valid value in \Ceu\ 
+($\sigma$ maps a memory location to a value). 
 
-\begin{grammar}
-<p> ::= mem(varid)                   \hfill (memory access to `varid')
-\alt await(evtid)                    \hfill (await event `evtid')
-\alt emit(evtid)                     \hfill (emit event `evtid')
-\alt nop                             \hfill (no operation)
-\end{grammar}
+A \emph{configuration} is a triple~$\<p,\alpha,\sigma,n>\in{P\times{\E^*}\times{\Sigma}\times{N}}=\Delta$ that represents the
+situation of program~$p$ waiting to be evaluated in stack~$\alpha$, memory~$\sigma$ and
+reaction~$n$.  Given an initial configuration, each program reaction is
+computed by successive applications of the reaction-step
+relation~$\mathord{\to}\subseteq{\Delta\times\Delta}$ such
+that~$\<p,\alpha,\sigma,n>\step{}\<p',\alpha',\sigma',n>$ iff: an execution 
+step of program~$p$ in stack~$\alpha$, memory~$\sigma$ and reaction~$n$
+evaluates to a modified program~$p'$, a modified stack~$\alpha'$ and a modified
+memory~$\sigma$' in the same reaction.  Since relation~$\step{}$ is defined in 
+a way such that it can only relate configurations with the same~$n$, we often
+write~$\<p,\alpha, \sigma>\step{n}\<p',\alpha',\sigma'>$
+for~$\<p,\alpha,\sigma,n>\step{}\<p',\alpha',\sigma',n>$.
 
-\begin{itemize}
-  \item Compound expressions 
-\end{itemize}
+The reaction-step relation~$\step{\null}$ is defined inductively by the
+rules presented in
+%%
+\Cref{%
+Section:step:skip,%
+Section:step:memory,%
+Section:step:await-and-emit,%
+Section:step:conditionals,%
+Section:step:sequences-and-loops,%
+Section:step:parand-and-paror,%
+}.
 
-\begin{grammar}
-<p> ::= if mem(varid) then p else p  \hfill (conditional) 
-\alt p ; p                           \hfill (sequence)
-\alt loop p                          \hfill (loop)
-\alt loop p ; break ; p              \hfill (loop with break)
-\alt p AND p                         \hfill (par/and)
-\alt p OR p                          \hfill (par/or)
-\end{grammar}
+
+\subsection{Skip}
+\label{Section:step:skip}
+For all~$n\in{N}$, $\alpha\in{\E^*}$, and~$\sigma\in{\Sigma}$:
+\begin{alignat*}{2}
+\Rtag{skip}
+\<\ceu\Skip,\alpha,\sigma>
+&\step{n}\<\ceu\Final,\alpha,\sigma>
+\end{alignat*}
 
-\begin{itemize}
-  \item Semantic rules 
-\end{itemize}
 
-\begin{grammar}
-<p> ::= awaiting(evtid, n)           \hfill (awaiting event `evtid' since sequence number `n')
-\alt emitting(n)                     \hfill (emitting on stack level `n')
-\alt p @ loop p                      \hfill (unwinded loop)
-\alt p $\bullet$ loop p              \hfill (unwinded loop within compositions)
-\alt fin p                           \hfill (finalization)
+
+\subsection{Memory access}
+\label{Section:step:memory}
+For all~$n\in{N}$, $v\in{V}$, $\alpha\in{\E^*}$, and~$\sigma\in{\Sigma}$:
 
-\end{grammar}
+\begin{alignat*}{2}
+\Rtag{read}
+\<\ceu{\Mem(v)},\alpha,\sigma>
+&\step{n}\<\ceu\Skip,\alpha,\sigma>
+\\
+%%
+\Rtag{write}
+\<\ceu{\Attr{v}{x}},\alpha,\sigma>
+&\step{n}\<\ceu\Skip,\alpha,\sigma'>
+&&\qquad\text{with}
+\begin{cases}
+  \sigma'(u) = \sigma(u), \text{for $u \ne v$}\\
+  \sigma'(v) = x
+\end{cases}
+\\
+\end{alignat*}
 
-\subsection{Operational Semantics}
-\label{sec:operational}
+
+\subsection{Await and emit}
+\label{Section:step:await-and-emit}
 
-\textbf{Relation-inner}
-\[
-  {<S,p> \inner <S',p'>}
-\]
-where:
-\[
-  S,S' \in evtid   \tag{sequence of event identifiers}
-\]
-\[
-  p,p' \in P       \tag{programs following the abstract syntax}
-\]
-\[
-  n \in \mathbb{N} \tag{unique identifier for the reaction chain}
-\]
+For all~$n$, $n'\in{N}$, $E\in{\Eext}$, $e\in{\Eint}$, $\alpha\in{\E^*}$, 
+and~$\sigma\in{\Sigma}$:
+\begin{alignat*}{2}
+\Rtag{await-ext}
+\<\ceu{\AwaitExt(E)},\alpha,\sigma>
+&\step{n}\<\ceu{\AwaitingExt(E,n')},\alpha,\sigma>
+&&\qquad\text{with~$n'=n+1$}\\
+%%
+\Rtag{awake-ext}
+\<\ceu{\AwaitingExt(E,n')},E\alpha,\sigma>
+&\step{n}\<\ceu\Skip,E\alpha,\sigma>
+&&\qquad\text{if~$n'<{n}$}\\
+%%
+\Rtag{await-int}
+\<\ceu{\AwaitInt(e)},\alpha,\sigma>
+&\step{n}\<\ceu{\AwaitingInt(e,n)},\alpha,\sigma>
+\\
+%%
+\Rtag{awake-int}
+\<\ceu{\AwaitingInt(e,n)},e\alpha,\sigma>
+&\step{n}\<\ceu\Skip,e\alpha,\sigma>
+\\
+%%
+\Rtag{emit-push}
+\<\ceu{\Emit(e)},\alpha,\sigma>
+&\step{n}\<\ceu{\Emitting(n')},e\alpha,\sigma>
+&&\qquad\text{with~$n'=\|\alpha|$\,.}\\
+%%
+\Rtag{emit-pop}
+\<\ceu{\Emitting(n')},\alpha,\sigma>
+&\step{n}\<\ceu\Skip,\alpha,\sigma>
+&&\qquad\text{if~$n'=\|\alpha|$\,.}
+\end{alignat*}
 
-\textbf{Rules:}
+
+\subsection{Conditionals}
+\label{Section:step:conditionals}
 
-%mem
-\[
-  \tuple{S, mem(id)} \inner \tuple{S, nop}
-  \tag{mem}
-\]
+For all~$n\in{N}$, $v\in{V}$, $\alpha\in{\E^*}$, ~$p_1$, $p_2\in{P}$ and~$\sigma\in{\Sigma}$:
+\begin{alignat*}{3}
+\Rtag{if-true}
+\<\ceu{\Ifelse{v}{p_1}{p_2}},\alpha,\sigma>
+&\step{n}\<p_1,\alpha,\sigma>
+&&\qquad\text{if~$\val(v,n,\sigma)\ne0$}\\
+%%
+\Rtag{if-false}
+\<\ceu{\Ifelse{v}{p_1}{p_2}},\alpha,\sigma>
+&\step{n}\<p_2,\alpha,\sigma>
+&&\qquad\text{if~$\val(v,n,\sigma)=0$\,,}
+\end{alignat*}
+%%
+where~$\val(v,n,\sigma)$ denotes the value of variable~$v$ in reaction~$n$ and
+in memory~$\sigma$.  For simplicity, and without loss of generality, we deal 
+only with integer variables, i.e., $\val(v,n,\sigma)\in{N}$, for all~$v$, ~$n$
+and~$\sigma$.  Moreover, we assume that~$\val(\nil,n,\sigma)=0$, for all~$n$
+and~$\sigma$.
 
-%await
-\[
-  \tuple{S, await(id)} \inner \tuple{S, awaiting(id, n+1)} 
-  \tag{await}
-\]
+
+\subsection{Sequences and loops}
+\label{Section:step:sequences-and-loops}
 
-~
-%awake
-\[
-  \tuple{id:S, awaiting(id, m)} \inner \tuple{id:S, nop}, M < n 
-  \tag{awake}
-\]
+For all~$n\in{N}$, $v\in{V}$, $\alpha$, $\alpha'\in{\E^*}$, ~$p$, $p_1$,
+$p_1'$, $p_2\in{P}$ and~$\sigma,\sigma'\in{\Sigma}$:
+\begin{alignat*}{2}
+\Rtag{seq-skip}
+\<\ceu{\Skip;p},\alpha,\sigma>&\step{n}\<p,\alpha,\sigma>&&\\
+%
+\Rtag{seq-brk}
+\<\ceu{\Break};p,\alpha,\sigma>&\step{n}\<\ceu{\Break},\alpha,\sigma>&&\\
+%%
+\Rtag{seq-adv}&\hskip-4.15em
+\AXC{$\<p_1,\alpha,\sigma>\step{n}\<p_1',\alpha',\sigma'>$}
+\UIC{$\<p_1;p_2,\alpha>\step{n}\<p_1';p_2,\alpha',\sigma'>$}
+\DP&&\\
+%%
+\Rtag{loop-expd}
+\<\ceu{\Loop p},\alpha,\sigma>&\step{n}\<\ceu{p\Atloop p},\alpha,\sigma>&&\\
+%%
+\Rtag{loop-skip}
+\<\ceu{\Skip\Atloop p},\alpha,\sigma>&\step{n}\<\ceu{\Loop p},\alpha,\sigma>&&\\
+%%
+\Rtag{loop-brk}
+\<\ceu{\Break\Atloop p},\alpha,\sigma>&\step{n}\<\ceu\Skip,\alpha,\sigma>&&\\
+%%
+\Rtag{loop-adv}&\hskip-6.7em
+\AXC{$\<p_1,\alpha,\sigma>\step{n}\<p_1',\alpha',\sigma'>$}
+\UIC{$\<\ceu{p_1\Atloop p_2},\alpha,\sigma>
+  \step{n}\<\ceu{p_1'\Atloop p_2},\alpha',\sigma'>$}
+\DP&&
+\end{alignat*}
 
-~
-%emit
-\[
-  \tuple{S, emit(id)} \inner \tuple{id:S, emitting(|S|)} 
-  \tag{emit}
-\]
+
+\subsection{Par/and and par/or}
+\label{Section:step:parand-and-paror}
 
-~
-%pop
-\[
-  \tuple{S, emitting(|S|)} \inner \tuple{S, nop)} 
-  \tag{pop}
-\]
+For all~$n\in{N}$, $v\in{V}$, $\alpha$, $\alpha'\in{\E^*}$, ~$p_1$,
+$p_1'$, $p_2$, $p_2'\in{P}$ and~$\sigma,\sigma'\in{\Sigma}$:
+\begin{alignat*}{2}
+\Rtag{and-skip1}
+\<\ceu{\Skip\And p_2},\alpha,\sigma>&\step{n}\<p_2,\alpha,\sigma>&&\\
+%%
+\Rtag{and-skip2}
+\<\ceu{p_1\And\Skip,\alpha,\sigma}>&\step{n}\<p_1,\alpha,\sigma>&&\\
+%%
+\Rtag{and-brk1}
+\<\ceu{\Break{}\And p_2},\alpha,\sigma>&\step{n}\<\ceu{p_2';\Break},\alpha,\sigma>
+&&\quad\text{with~$p_2'=\clear(p_2)$}\\
+%%
+\Rtag{and-brk2}
+\<\ceu{p_1 \And\Break{}},\alpha>&\step{n}\<\ceu{p_1';\Break},\alpha,\sigma>
+&&\quad\text{with~$p_1'=\clear(p_1)$}\\
+%%
+\Rtag{and-adv1}&\hskip-5.75em
+\AXC{$\<p_1,\alpha,\sigma>\step{n}\<p_1',\alpha',\sigma'>$}
+\UIC{$\<\ceu{p_1\And p_2},\alpha,\sigma>\step{n}\<\ceu{p_1'\And p_2},\alpha',\sigma'>$}
+\DP&&\\
+%%
+\Rtag{and-adv2}&\hskip-5.75em
+\AXC{$\#(p_1,\alpha,\sigma,n)\step{n}\ceu\True \quad \<p_2,\alpha,\sigma>\step{n}\<p_2',\alpha',\sigma'>$}
+\UIC{$\<\ceu{p_1\And p_2},\alpha,\sigma>\step{n}\<\ceu{p_1\And p_2'},\alpha',\sigma'>$}
+\DP&&,
+\end{alignat*}
+where the call~$\clear(p)$ (read ``clear~$p$'', defined in 
+Section~\ref{Section:step:clear}) concatenates in a sequence 
+the body~$p'$ of all active finalization instructions~\ceu{\Fin{p'}} in~$p$,
+and the predicate $\#(p,\alpha,\sigma,n)$ (read ``p is blocked'') is true iff
+all execution trails of $p$ are hanged in instructions that cannot
+be consumed in the current reaction step, viz., \ceu\AwaitingExt,
+\ceu\AwaitingInt, \ceu\Emitting\ or \ceu\Final.
+See \Cref{Appendix:extra:clear,Appendix:extra:is-blocked} 
+for the precise definition of these functions.
 
-~
-%break
-% \[
-%   \tuple{ S, break } \inner \tuple{ S, nop}
-%     \tag *{break}
-% \]
+The evaluation rules for par/or instructions (below) are slightly different.
+While in the case par/and both sides must terminate (evaluate
+to~\ceu{\Skip} or~\ceu\Break) for the composition to terminate, in the
+case of par/or the termination of \emph{any} side causes the whole
+composition to terminate.  Note, however, that in both cases, par/and and
+par/or, the right-hand side of the instruction can only be evaluated if the
+its left-hand side is blocked.
 
-~
+For all~$n\in{N}$, $v\in{V}$, $\alpha$, $\alpha'\in{\E^*}$, $p_1$,
+$p_1'$, $p_2$, $p_2'\in{P}$ and $\sigma,\sigma'\in{\Sigma}$:
+\begin{alignat*}{2}
+\Rtag{or-skip1}
+\<\ceu{\Skip\Or p_2},\alpha,\sigma>&\step{n}\<\ceu{p_2'},\alpha,\sigma>
+&&\enspace\text{with~$p_2'=\clear(p_2)$}
+\\
+%%
+\Rtag{or-skip2}&\hskip-5.2em
+\AXC{$\#(p_1,\alpha,\sigma,n)\step{n}\ceu\True$}
+\UIC{$\<\ceu{p_1\Or \Skip},\alpha,\sigma>\step{n}\<\ceu{p_1'},\alpha,\sigma>$}
+\DP&&\enspace\text{with~$p_1'=\clear(p_1)$}
+\\
+%%
+\Rtag{or-brk1}
+\<\ceu{\Break{}\Or p_2},\alpha,\sigma>&\step{n}\<\ceu{p_2';\Break},\alpha,\sigma>
+&&\enspace\text{with~$p_2'=\clear(p_2)$}\\
+%%
+\Rtag{or-brk2}&\hskip-5.2em
+\AXC{$\#(p_1,\alpha,\sigma,n)\step{n}\ceu\True$}
+\UIC{$\<\ceu{p_1\Or \Break},\alpha,\sigma>\step{n}\<\ceu{p_1';\Break},\alpha,\sigma>$}
+\DP&&\enspace\text{with~$p_1'=\clear(p_1)$}
+\\
+%%
+\Rtag{or-adv1}&\hskip-5.2em
+\AXC{$\<\ceu{p_1},\alpha,\sigma>\step{n}\<p_1',\alpha',\sigma'>$}
+\UIC{$\<\ceu{p_1\Or p_2},\alpha,\sigma>\step{n}\<\ceu{p_1'\Or p_2},\alpha',\sigma'>$}
+\DP&&\\
+%%
+\Rtag{or-adv2}&\hskip-5.2em
+\AXC{$\#(p_1,\alpha,\sigma,n)\step{n}\ceu\True \quad \<\ceu{p_2},\alpha,\sigma>\step{n}\<p_2',\alpha',\sigma'>$}
+\UIC{$\<\ceu{p_1\Or p_2},\alpha,\sigma>\step{n}\<\ceu{p_1\Or p_2'},\alpha',\sigma'>$}
+\DP&&
+\end{alignat*}
 
-\textbf{Compound expressions:}
-%if-true
-\[
-  \inference{mem(varid,n)\ne0}
-            {\tuple{ S, \textrm{if mem(varid) then p else q}} \inner \tuple{ S, p}}
-            \tag{if-true}
-\]
+
+\section{Properties of the reaction-step relation}
+\label{Section:step-properties}
 
-~
-%if-false
-\[
-  \inference{val(varid,n)=0}
-            {\tuple{ S, \textrm{if mem(varid) then p else q}} \inner \tuple{ S, q}}
-            \tag{if-false}
-\]
+\begin{thm}[Determinism]
+For all~$p$, $p_1$, $p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$,
+and~$n\in{N}$:
+\begin{equation*}
+(\<p,\alpha>\step{n}\<p_1,\alpha_1>
+\quadtext{and}
+\<p,\alpha>\step{n}\<p_2,\alpha_2>)
+\quadtext{implies}
+\<p_1,\alpha_1>=\<p_2,\alpha_2>\,.
+\end{equation*}
+\end{thm}
+\begin{proof}
+Suppose~$\<p,\alpha>\step{n}\<p_1,\alpha_1>$
+and~$\<p,\alpha>\step{n}\<p_2,\alpha_2>$, for arbitrary~$p$, $p_1$,
+$p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$, and~$n\in{N}$.  We
+proceed by structural induction on~$p$.  The following ten cases are
+possible.  (The cases where~$p=\ceu{\Mem(v)}$, $p=\ceu{\Break}$, and
+$p=\ceu{\Fin{p'}}$ are not considered since there are no rules to evaluate
+them, i.e., by the theorem hypothesis, $p\ne\ceu{\Mem(v)}$,
+$p\ne\ceu\Break$, and~$p\ne\ceu{\Fin{p'}}$.)
 
-~
-%seq-adv
-\[
-  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
-            {\tuple{ S, (p ; q)} \inner \tuple{ S', (p' ; q)}}
-            \tag{seq-adv}
-\]
+\Case{1}. $p=\ceu{\AwaitExt(e)}$, for some~$e\in{E}$.  By rule~\R{await},
+$p_1=p_2=\ceu{\AwaitingExt(e,n')}$, with~$n'=n+1$,
+and~$\alpha_1=\alpha_2=\alpha$.
 
-~
-%seq-nop
-\[
-  \tuple{ S, (nop ; q)} \inner \tuple{ S, q}
-    \tag{seq-nop}
-\]
+\Case{2}. $p=\ceu{\AwaitingExt(e,n')}$, for some~$e\in{E}$.  By rule~\R{awake},
+$p_1=p_2=\ceu\Skip$, with~$n'\leq{n}$, and~$\alpha_1=\alpha_2=\alpha$.
 
-~
-%break-seq
-% \[
-%   \tuple{ S, (break ; p)} \inner \tuple{ S, break}
-%     \tag{break-seq}
-% \]
+\Case{3}. $p=\ceu{\Emit(e)}$, for some~$e\in{E}$.
+\FIXME{\dots}
 
-%loop-expd
-\[
-  \tuple{ S, (loop \;p)} \inner \tuple{ S, (p\; @\; loop \;p)} 
-    \tag{loop-expd}
-\]
+\Case{4}. $p=\ceu{\Emitting(n')}$, for some~$n'\in{N}$.
+\FIXME{\dots}
 
-~
-%loop-adv
-\[
-  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
-            {\tuple{ S, (p \; @ \; loop\; q)} \inner \tuple{ S', (p' \; @ \; loop \; q)}}
-            \tag{loop-adv}
-\]
+\Case{5}. $p=\ceu{\Ifelse{v}{p'}{p''}}$, for some~$v\in{V}$ and~$p'$,
+$p''\in{P}$.
+\FIXME{\dots}
 
-~
-%loop-nop
-\[
-  \tuple{ S, (nop\; @ \; loop \; p)} \inner \tuple{ S, loop \; p}
-    \tag{loop-nop}
-\]
+\Case{6}. $p=\ceu{p';p''}$, for some~$p'$, $p''\in{P}$.
+\FIXME{\dots}
 
-~
-%loop-break
-\[
-  \tuple{ S, (break ; \; p \; \; @ \; loop \; p) } \inner \tuple{ S, nop}
-    \tag{loop-break}
-\]
+\Case{7}. $p=\ceu{\Loop p'}$, for some~$p'\in{P}$.
+\FIXME{\dots}
 
-~
-%and-adv1
-\[
-  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
-            {\tuple{ S, (p \; AND \; q)} \inner \tuple{ S', (p' \; AND \; q)}}
-            \tag{and-adv1}
-\]
+\Case{8}. $p=\ceu{p'\Atloop p''}$, for some~$p'$, $p''\in{P}$.
+\FIXME{\dots}
 
-~
-%and-adv2
-\[
-  \inference{isBlocked(n,S,p) & \tuple{ S, q} \inner \tuple{ S', q'}} 
-            {\tuple{ S, (p \; AND \; q)} \inner \tuple{ S', (p \; AND \; q'}}
-            \tag{and-adv2}
-\]
+\Case{9}. $p=\ceu{p'\And p''}$, for some~$p'$, $p''\in{P}$.
+\FIXME{\dots}
 
-~
-%and-adv-loop1
-\[
-  \tuple{S, (loop \; p \; AND \; q)} \inner \tuple{S, (p \; \bullet \; loop \; p \; AND  \; q)}
-  \tag{and-adv-loop1}
-\]
+\Case{10}. $p=\ceu{p'\Or p''}$, for some~$p'$, $p''\in{P}$.
+\FIXME{\dots}
 
-~
-%and-adv-loop2
-\[
-  \inference {isBlocked(n,S,p)}
-             {\tuple{S, (p \; AND \; loop \; q)} \inner \tuple{S, (p \; AND \; q \; \bullet \; loop \; q)}}
-  \tag{and-adv-loop2}
-\]
+\begin{TODO}
+Aqui eu esbarro no primeiro problema.  A indução em~$P$ fica
+  complicada porque há programas que não avaliam para nada.  Por exemplo,
+  se~$p=\ceu{\Ifelse{v}{p'}{p''}}$ com $p'=\ceu\Break$, então a hipótese
+  indutiva não vale~$p'$, mesmo com~$p'\prec{p}$.  Ou seja, eu teria que
+  identificar todos os casos em que o~$p'$ da hipótese indutiva não vale.
+  Eu vejo duas soluções simples para esse problema.
 
-~
-%and-brk1
-\[
-  \tuple{S, (break; \; p \; \bullet \; loop \; p \; AND \; q)} \inner \tuple {S, (clear(q) ; nop)} 
-  \tag{and-brk1}
-\]
+  A primeira solução é fazer com que todo programa avalie para alguma coisa,
+  e.g., definir regras do tipo:
+  \begin{align*}
+    \<\ceu{\Mem(v)},\alpha>&\step{n}\<\ceu\Skip,\alpha>\\
+    \<\ceu\Break,\alpha>&\step{n}\<\ceu\Break,\alpha>\\
+    \<\ceu{\Fin{p_1}},\alpha>&\step{n}\<\ceu{\Fin{p_1}},\alpha>\,.\\
+  \end{align*}
+  Nesse caso, teríamos que ver se as regras acima são suficientes e se elas
+  não causam conflitam com as existentes.
 
-~
-%and-brk2
-\[
-  \inference{isBlocked(n,S,p)}
-            {\tuple{S, (p \; AND \; break; \; q \; \bullet \; loop \; q)} \inner \tuple {S, (clear(p) ; nop)}} 
-  \tag{and-brk2}
-\]
+  A segunda solução, é deixar em~$P$ apenas os programas que avaliam para
+  alguma coisa.  Ou seja, \ceu{\Mem(v)} e \ceu\Break\ não fariam parte
+  de~$P$ mas sim de um conjunto auxiliar.  Dessa forma, quando eu fizesse
+  uma indução em~$P$ não teria que lidar com esses casos.  Voltado ao
+  exemplo, \ceu{\Ifelse{v}{\Break}{p''}} seria tratado como um caso base, já
+  que na gramática eu teria algo do tipo:
+  \begin{align*}
+    p\Coloneqq\ceu{\Ifelse{v}{\Break}{p_2}}\mid\cdots{}
+  \end{align*}
+  A desvantagem dessa segunda opção é que o número de regras pode aumentar
+  significativamente.
 
-~
-%loop-comp-adv
-\[
-  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
-            {\tuple{ S, (p \; \bullet \; loop\; q)} \inner \tuple{ S', (p' \; \bullet \; loop \; q)}}
-            \tag{loop-comp-adv}
-\]
+  Qualquer que seja a solução, se eu tenho~$\<p,\alpha>$ sempre avaliando
+  para alguma coisa, na hora de fazer o fecho (i.e., na definição da
+  relação~$\eval{}$) eu não preciso do fecho reflexivo---o transitivo basta.
+\end{TODO}
+\end{proof}
 
-~
-%loop-nop
-\[
-  \tuple{ S, (nop\; \bullet \; loop \; p)} \inner \tuple{ S, p \; \bullet \; loop \; p}
-    \tag{loop-comp-nop}
-\]
+\begin{thm}[Termination]
+For all~$\<p,\alpha>\in\Delta$,
+\begin{equation*}
+(\exists!\<p',\alpha'>\in\Delta)(\<p,\alpha>\step{n}\<p',\alpha'>\,).
+\end{equation*}
+\end{thm}
+\begin{proof}
+By structural induction on~$P$.
 
-~
-%loop-break
-\[
-  \tuple{ S, (break ; \; p \; \; \bullet \; loop \; p) } \inner \tuple{ S, break}
-    \tag{loop-comp-break}
-\]
+\begin{TODO}
+Aqui eu caio no memso problema anterior.  Há programas em~$P$ que não
+avaliam para nada.
+\end{TODO}
+\end{proof}
 
-~
-%OR-adv1
-\[
-  \inference{\tuple{ S, p} \inner \tuple{ S', p'}}
-            {\tuple{ S, (p \; OR \; q)} \inner \tuple{ S', (p' \; OR \; q)}}
-            \tag{or-adv1}
-\]
+
+\section{Reaction}
+\label{Section:reaction}
 
-~
-%or-adv2
-\[
-  \inference{isBlocked(n,S,p) & \tuple{ S, q} \inner \tuple{ S', q'}} 
-            {\tuple{ S, (p \; OR \; q)} \inner \tuple{ S', (p \; OR \; q'}}
-            \tag{or-adv2}
-\]
+\begin{TODO}
+Eu tinha definido a seguinte regra:
+%%
+\begin{quote}
+  For all~$n\in{N}$, $e\in{E}$, $\alpha\in{E^*}$, and~$p\in{P}$:
+  \label{Rule:pop}
+  \begin{equation*}
+    \Rtag{pop}\hskip1.7em
+    \<\ceu{p},e\alpha>\step{n}\<\ceu{p},\alpha>
+    \qquad\qquad\text{if~$\#(p,e\alpha,n)$\,.}
+  \end{equation*}
+  %%
+  This rule is necessary to ensure that pending~\ceu\Emitting\ instructions
+  (in lower stack indexes) are eventually resumed by subsequent reaction
+  steps.
+\end{quote}
+Dessa forma, o ``pop'' faria parte da própria definição de passo.  Mas
+depois eu percebi que essa regra complica (inviabiliza?) qualquer indução
+simples em~$P$ (acho que eu teria que fazer uma indução em
+pares~$\<p,\alpha>$).  Talvez ela tenha que ficar fora mesmo---i.e., na
+definição da relação~$\eval{}$, igual o original---ou talvez haja alguma
+forma de implementá-la em~$\step{}$ sem complicar as provas.
+\end{TODO}
 
-~
-%and-nop1
-\[
-  \tuple{ S, (nop \; AND \; q)} \inner \tuple{S, q}
-  \tag{and-nop1}
-\]
+The reaction-step relation ($\step{}$), defined in \Cref{Section:step}
+computes a single step within a reaction.  To compute a full reaction we now
+define the reaction relation~$\eval{n}\subseteq\Delta\times{P}$ such
+that~$\<p,\alpha>\eval{n}{p'}$ iff program~$p$ in initial state~$\alpha$
+evaluates (reacts) to a modified program~$p'$ in the empty state in a finite
+number of steps.  More formally, for all~$\alpha\in{E}$ and~$p$, $p'\in{P}$:
+%%
+\begin{equation*}
+  \<p,\alpha>\eval{n}{p'}\quadtext{iff}\<p,\alpha>\stepx{n'}\<p,\nil>\,,
+\end{equation*}
+%%
+where~$\stepx{}$ is the reflexive-transitive closure of relation~$\step{}$.
+We use~$\<p,\alpha>\eval{n}{p'}$ as an abbreviation
+for~$\<p,\alpha,n>\eval{}p'$.
 
-~
-%and-nop2
-\[
-  \tuple{ S, (p \; AND \; nop)} \inner \tuple{S, p}
-  \tag{and-nop2}
-\]
+Finally, we describe the complete execution of a \Ceu\ program, given some
+sequence of external events, by applying the reaction relation repeatedly to
+each event in the sequence, with the reaction number incremented after each
+application.
 
-~
-%and-brk1
-\[
-  \tuple{ S, (break ; p \; @ \;loop \; p \; AND \; q)} \inner \tuple{S, clear(q)}
-  \tag{and-brk1}
-\]
-~
-%or-nop1
-\[
-  \tuple{ S, (nop \; OR \; q)} \inner \tuple{S, nop}
-  \tag{or-nop1}
-\]
+
+\section{Properties of the reaction relation}
+\label{Section:reaction-properties}
 
-~
-%or-nop2
-\[
-  \tuple{ S, (p \; OR \; nop)} \inner \tuple{S, nop}
-  \tag{or-nop2}
-\]
+\begin{thm}[Determinism]
+For all~$p$, $p_1$, $p_2\in{P}$, $\alpha\in{E^*}$, and~$n\in{N}$:
+\begin{equation*}
+(\<p,\alpha>\eval{n}p_1\quadtext{and}\<p,\alpha>\eval{n}p_2)
+\quadtext{implies}p_1=p_2\,.
+\end{equation*}
+\end{thm}
+\begin{proof}
+By induction on the number of reaction steps.  \FIXME{\dots}
+\end{proof}
+
+\begin{thm}[Termination]
+For all~$p$, $p'\in{P}$, $\alpha\in{E^*}$, and~$n\in{N}$:
+\begin{equation*}
+(\exists!p'\in{P})(\<p,\alpha>\eval{n}p')\,.
+\end{equation*}
+\end{thm}
+\begin{proof}
+By induction on the number of reaction steps.  \FIXME{\dots}
+
+\begin{TODO}
+  Talvez eu tenha que partir para uma indução em pares
+  ordenados~$\<p,\alpha>$, já que tanto~$p$ pode diminur quanto~$\alpha$.
+\end{TODO}
+\end{proof}
+
+
+\section{Alternative formulation (Pure \Ceu)}
+\label{Section:pure-ceu}
+
+\begin{TODO}
+Uma abordagem alternativa seria simplificar a formalização.  Minha proposta
+é, num primeiro momento, definir uma versão reduzida (pura) de
+\Ceu\ retirando da linguagem as construções \ceu{\Mem(v)} e
+\ceu{\Ifelse{v}{p_1}{p_2}} e talvez outras coisas, e.g., loop e finalização.
+E dado essa versão pura, tentar definir uma semântica big-step que se
+comporte da maneira desejada, i.e., avaliação da esquerda para direita com
+instruções \emph{await} atrasadas.  (Eu acho mais fácil trabalhar com a
+big-step, mas se não tiver jeito a gente volta para a small-step.)
+
+Num segundo momento, minha idéia é pegar as semânticas construtivas de
+Esterel e ver como eles resolvem o problema do loop causal no \emph{await}
+que acorda no mesmo ciclo.  Talvez seja interessante não atrasar os
+\emph{awaits} em \Ceu.
+
+Feito isso, i.e., definida uma base semântica e provados o determinismo e
+convergência, eu posso partir para as provas de equivalência entre programas
+e, quem sabe, encontrar possíveis formas normais.
+
+(A propósito, do jeito que está definido hoje as reações de \Ceu\ não
+retornam nada para o ambiente, i.e., não há evento externo de saída.  É isso
+mesmo?)
+\end{TODO}
+
+
+\appendix
+\section{Auxiliary definitions}
+\label{Appendix:extra}
+
+
+\subsection{The clear function}
+\label{Appendix:extra:clear}
+
+The clear function~$\clear\colon{P}\to{P'}$ concatenates in a sequence the
+body of all active finalization instructions~\ceu{\Fin p'} within some
+program~$p$.  Function~$\clear$ is defined by recursion on~$P$ as follows:
+\begin{align*}
+\clear(\ceu\Skip)&=\ceu\Skip\\
+\clear(\ceu{\Mem(v)})&=\ceu\Skip\\
+\clear(\ceu{\AwaitExt(e)})&=\ceu\Skip\\
+\clear(\ceu{\AwaitInt(e)})&=\ceu\Skip\\
+\clear(\ceu{\Emit(e)})&=\ceu\Skip\\
+\clear(\ceu{\Break})&=\ceu\Skip\\
+\clear(\ceu{\Ifelse{v}{p_1}{p_2}})&=\ceu\Skip\\
+\clear(\ceu{p_1;p_2})&=\clear(p_1)\\
+\clear(\ceu{\Loop p_1})&=\ceu\Skip\\ %%Loop não é avaliado?
+\clear(\ceu{p_1\And p_2})&=\ceu{\clear(p_1);\clear(p_2)}\\
+\clear(\ceu{p_2\Or p_2})&=\ceu{\clear(p_1);\clear(p_2)}\\
+\clear(\ceu{\Fin p_1})&=\ceu{p_1}\\
+\clear(\ceu{\AwaitingExt(e,n)})&=\ceu\Skip\\
+\clear(\ceu{\AwaitingInt(e,n)})&=\ceu\Skip\\
+\clear(\ceu{\Emitting(n)})&=\ceu\Skip\\
+\clear(\ceu{p_1\Atloop p_2})&=\ceu\Skip\\
+\end{align*}
+
+The form of program~$p'\in{P'}\subseteq{P}$ returned by~$\clear$ is given by
+the grammar:
+\begin{equation*}
+p'\in{P'}\Coloneqq\ceu{\Skip}\mid\ceu{p_1';p_2'}\,.
+\end{equation*}
+(Note that the definition of~$\clear$ assumes that the body~$p_1$ of all
+instructions~$\ceu{\Fin p_1}$ is necessarily a member of~$P'$, i.e., $p_1$
+is either~\ceu\Skip\ or~\ceu{\Mem(v)} or some finite sequence of such
+instructions.)
+
+
+\subsection{The is-blocked predicate}
+\label{Appendix:extra:is-blocked}
+
+The is-blocked predicate~$\#\colon{P}\times{\E^*}\times\Sigma\times{N}\to\{\top,\bot\}$
+checks if all execution trails of a given program~$p$ in stack~$\alpha$,
+memory~$\sigma$ and reaction~$n$ are blocked, i.e., if all its trails are 
+hanged in instructions \ceu\AwaitingExt\, \ceu\AwaitingInt\, \ceu\Emitting\ or 
+\ceu\Final, which cannot be consumed in the current reaction step.  
+Predicate~$\#$ is defined by recursion on~$P$ as follows:
+
+\begin{alignat*}{2}
+\Rtag{\#}&\hskip-5.75em
+\<\ceu\Skip,\alpha,\sigma,n>\step{}\ceu\False
+&&\\
+\Rtag{\#}&\hskip-5.75em
+\<\ceu\Final,\alpha,\sigma>\step{n}\ceu\True
+&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$e' \neq e$}
+\UIC{$\<\ceu\AwaitingExt(e',n'),e\alpha,\sigma>\step{n}\ceu\True$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$n' = n$}
+\UIC{$\<\ceu\AwaitingExt(e',n'),e\alpha,\sigma>\step{n}\ceu\True$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$e' \neq e$}
+\UIC{$\<\ceu\AwaitingInt(e',n'),e\alpha,\sigma>\step{n}\ceu\True$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$n' \neq \|\alpha|$}
+\UIC{$\<\ceu\Emitting(n'),\alpha,\sigma>\step{n}\ceu\True$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$\#(p_1,\alpha,\sigma,n)\step{n}\ceu\True$}
+\UIC{$\<\ceu{p_1 ; p_2},\alpha,\sigma>\step{n}\ceu\True$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$\#(p_1,\alpha,\sigma,n)\step{n}\ceu\True$}
+\UIC{$\<\ceu{p_1\Atloop p_2},\alpha,\sigma>\step{n}\ceu\True$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$\#(p_1,\alpha,\sigma,n)\step{n}\ceu\True \quad\quad \#(p_2,\alpha,\sigma,n)\step{n}\ceu\True$}
+\UIC{$\<\ceu{p_1\And p_2},\alpha,\sigma>\step{n}\ceu\True$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$\#(p_1,\alpha,\sigma)\step{n}\ceu\True \quad\quad  \#(p_2,\alpha,\sigma)\step{n}\ceu\True$}
+\UIC{$\<\ceu{p_1\Or p_2},\alpha,\sigma>\step{n}\ceu\True$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$p=\ceu\Mem(v)$}
+\UIC{$\<\ceu{p},\alpha,\sigma>\step{n}\ceu\False$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$p=\ceu\AwaitExt$}
+\UIC{$\<\ceu{p},\alpha,\sigma>\step{n}\ceu\False$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$p=\ceu\AwaitInt$}
+\UIC{$\<\ceu{p},\alpha,\sigma>\step{n}\ceu\False$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$p=\ceu\Emit$}
+\UIC{$\<\ceu{p},\alpha,\sigma>\step{n}\ceu\False$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$p=\ceu\Break$}
+\UIC{$\<\ceu{p},\alpha,\sigma>\step{n}\ceu\False$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$p=\ceu{\Ifelse{v}{p_1}{p_2}}$}
+\UIC{$\<\ceu{p},\alpha,\sigma>\step{n}\ceu\False$}
+\DP&&
+\\
+\Rtag{\#}&\hskip-5.75em
+\AXC{$p=\ceu\Loop\;p_1$}
+\UIC{$\<\ceu{p},\alpha,\sigma>\step{n}\ceu\False$}
+\DP&&
+\end{alignat*}
+
+% \begin{align*}
+% \#(\ceu\Skip,e\alpha,n)&=\bot\\
+% \#(\ceu{\Mem(v)},e\alpha,n)&=\bot\\
+% \#(\ceu{\AwaitExt(e')},e\alpha,n)&=\bot\\
+% \#(\ceu{\Emit(e')},e\alpha,n)&=\bot\\
+% \#(\ceu{\Break},e\alpha,n)&=\bot\\
+% \#(\ceu{\Ifelse{v}{p_1}{p_2}},e\alpha,n)&=\bot\\
+% \#(\ceu{p_1;p_2},e\alpha,n)&=\#(p_1,e\alpha,n)\\
+% \#(\ceu{\Loop p_1},e\alpha,n)&=\bot\\
+% \#(\ceu{p_1\And p_2},e\alpha,n)&=\#(p_1,e\alpha,n)\land\#(p_2,e\alpha,n)\\
+% \#(\ceu{p_1\Or p_2},e\alpha,n)&=\#(p_1,e\alpha,n)\land\#(p_2,e\alpha,n)\\
+% \#(\ceu{\Fin p_1},e\alpha,n)&=\bot\FIXME{??}\\
+% \#(\ceu{\AwaitingExt(e',n')},e\alpha,n)&=e\ne{e'}\lor{n=n'}\\
+% \#(\ceu{\Emitting(n')},e\alpha,n)&=\|e\alpha|\ne{n'}\\
+% \#(\ceu{p_1\Atloop p_2},e\alpha,n)&=\#(p_1,e\alpha,n)\FIXME{??}\\
+% \end{align*}
+
 \end{document}
