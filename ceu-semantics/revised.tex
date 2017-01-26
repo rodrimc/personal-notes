@@ -42,7 +42,7 @@
   name=Theorem,
   refname={theorem,theorems},
   Refname={Theorem,Theorems},
-  %numberwithin=chapter,
+  numberwithin=section,
   style=plain,
   ]{theorem}
 \declaretheorem[
@@ -113,6 +113,8 @@
 }
 \def\step#1{\@raise{$\to$}{1.1ex}{#1}}
 \def\stepx#1{\@raise{$\step{#1}$}{-.75ex}{\ast}}
+\def\ostep#1{\@raise{$\Rightarrow$}{1.1ex}{#1}}
+\def\ostepx#1{\@raise{$\ostep{#1}$}{-.75ex}{\ast}}
 \makeatother
 %-
 \makeatletter
@@ -150,8 +152,16 @@
 \maketitle
 
 
-\section{Abstract syntax}
-\label{Section:syntax}
+\section{The original formulation}
+\label{sec:orig}
+
+The semantics discussed in this section follows as much as possible the
+original semantics of \Ceu\ presented in~\cite{?}.  Any deviations from
+original definitions are duly noted in the text.
+
+
+\subsection{Abstract syntax}
+\label{sub:orig:syntax}
 
 The \emph{abstract syntax} of \Ceu\ programs is given by the following
 grammar:
@@ -166,7 +176,7 @@ grammar:
     \halign{\strut\hfil$#$&$\;#$\hfil&\qquad#\hfil\cr
       p\in{P}\Coloneqq
           & \MARK{\ceu{\Skip}}          & do nothing\cr
-      \mid& \ceu{\Attr{v}{a}}           & assignment\cr
+      \mid& \MARK{\ceu{\Attr{v}{a}}}    & assignment\cr
       \mid& \ceu{\Await(e)}             & await event\cr
       \mid& \ceu{\Emit(e)}              & emit event\cr
       \mid& \ceu{\Break}                & break innermost loop\cr
@@ -193,8 +203,8 @@ are programs.  We assume the usual structure for arithmetic and boolean
 expressions, and omit their definition.
 
 
-\section{The reaction small-step relation}
-\label{Section:step}
+\subsection{The reaction inner-step relation}
+\label{sub:orig:inner}
 
 The \emph{state} of a \Ceu\ program within a reaction is represented by a
 stack of events~$\alpha=e_1e_2\dots{e_n}\in{E}^*$ together with a memory
@@ -202,25 +212,25 @@ map~$m\colon{v}\to{N}\in\mathcal{M}$.  A \emph{configuration} is a
 4-tuple~$\<p,\alpha,m,n>\in\Delta$ that represents the situation of
 program~$p$ waiting to be evaluated in state~$\<\alpha,m>$ and reaction~$n$.
 Given an initial configuration, each small-step within a program reaction is
-determined by the reaction-small-step
+determined by the reaction-inner-step
 relation~$\mathord{\step{}}\in\Delta\times\Delta$ such
-that~$\<p,\alpha,m,n>\step{}\<p',\alpha',m',n>$ iff a small reaction step of
+that~$\<p,\alpha,m,n>\step{}\<p',\alpha',m',n>$ iff a reaction inner-step of
 program~$p$ in state~$\<\alpha,m>$ and reaction number~$n$ evaluates to a
 modified program~$p'$ and a modified state~$\<\alpha',m'>$ in the same
 reaction~($n$).  Since relation~$\step{}$ can only relate configurations
 with the same~$n$, we shall write $\<p,\alpha,m>\step{n}\<p',\alpha',m'>$
 for~$\<p,\alpha,m,n>\step{}\<p',\alpha',m',n>$.
 
-Relation~$\step{}$ is defined inductively on the structure of \Ceu\ programs
-with the help of the auxiliary functions~$\eval$, $\blocked$, and~$\clear$.
-The~$\eval$ function evaluates arithmetic and boolean expressions on a given
-memory; we omit its definition and assume that such evaluation is
-deterministic and always terminates.  The~$\blocked$ function is a predicate
-that determines if all trails of a program~$p$ are blocked on a given event
-stack and reaction number.  And the~$\clear$ function extracts the body
-of~$\ceu{\Fin}$ blocks from a given program.
+Relation~$\step{}$ is defined inductively with the help of the auxiliary
+functions~$\eval$, $\blocked$, and~$\clear$.  The~$\eval$ function evaluates
+arithmetic or boolean expressions on a given memory; we omit its definition
+and assume that such evaluation is deterministic and always terminates.
+The~$\blocked$ function is a predicate that determines if all trails of a
+program~$p$ are blocked on a given event stack and reaction number.  And
+the~$\clear$ function extracts the body of~$\ceu{\Fin}$ blocks from a given
+program.
 
-\begin{definition}[label={def:blocked}]
+\begin{definition}[label={def:orig:blocked}]
   Function~$\blocked\colon{P\times{E^*}\times{N}}\to\{0,1\}$ is defined
   inductively as follows.
   \begin{align*}
@@ -273,7 +283,7 @@ of~$\ceu{\Fin}$ blocks from a given program.
   \end{align*}
 \end{definition}
 
-\begin{definition}[label={def:clear}]
+\begin{definition}[label={def:orig:clear}]
   Function $\clear\colon{P}\to{P}$ is defined inductively as follows.
 \begin{align*}
     \clear(\ceu{\Attr{v}{a}})
@@ -292,7 +302,7 @@ of~$\ceu{\Fin}$ blocks from a given program.
     &=\ceu{\Skip}\\
     %%
     \clear(\ceu{p_1;p_2})
-    &=\clear(p_1);\clear(p_2)\\
+    &=\clear(p_1);\MARK{\clear(p_2)}\\
     %%
     \clear(\ceu{\Loop p})
     &=\clear(p)\\
@@ -317,185 +327,202 @@ of~$\ceu{\Fin}$ blocks from a given program.
   \end{align*}
 \end{definition}
 
-\begin{definition}[label={def:small-step},name={Reaction small-step}]
+\begin{definition}[label={def:orig:inner-step},name={Reaction inner-step}]
   Relation~$\step{\null}\subseteq\Delta\times\Delta$ is defined inductively
   as follows.
-  \begin{gather*}
-    \intertext{\emph{Await and emit}}
-    \begin{alignat*}{2}
+
+  \noindent\emph{Await and emit}
+    \begin{alignat}{2}
+      \label{def:orig:inner:await}
       \<\ceu{\Await(e)},\alpha,m>
       &\step{n}\<\ceu{\Awaiting(e,n')},\alpha,m>
       &&\quad\text{with~$n'=n+1$}
-      \tag{$R_1$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:awaiting}
       \<\ceu{\Awaiting(e,n')},e\alpha,m>
       &\step{n}\<\ceu{\Skip},e\alpha,m>
       &&\quad\text{if~$n'\le{n}$}
-      \tag{$R_2$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:emit}
       \<\ceu{\Emit(e)},\alpha,m>
       &\step{n}\<\ceu{\Emitting(n')},e\alpha,m>
       &&\quad\text{with~$n'=\|\alpha|$}
-      \tag{$R_3$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:emitting}
       \<\ceu{\Emitting(n')},\alpha,m>
       &\step{n}\<\ceu{\Skip},\alpha,m>
       &&\quad\text{if~$n'=\|\alpha|$}
-      \tag{$R_4$}
-    \end{alignat*}\\[2\jot]
-    %%
-    \intertext{\emph{Conditionals}}
-    \begin{alignat*}{2}
+    \end{alignat}
+
+    \noindent\emph{Conditionals}
+    \begin{alignat}{2}
+      \label{def:orig:inner:if-true}
       \<\ceu{\Ifelse{b}{p_1}{p_2}},\alpha,m>
       &\step{n}\<p_1,\alpha,m>
       &&\quad\text{if~$\eval(b,m)=1$}
-      \tag{$R_5$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:if-false}
       \<\ceu{\Ifelse{b}{p_1}{p_2}},\alpha,m>
       &\step{n}\<p_2,\alpha,m>
       &&\quad\text{if~$\eval(b,m)=0$}
-      \tag{$R_6$}
-    \end{alignat*}\\[2\jot]
-    %%
-    \intertext{\emph{Sequences}}
-    \begin{alignat*}{2}
+    \end{alignat}
+
+    \noindent\emph{Sequences}
+    \begin{alignat}{2}
+      \label{def:orig:inner:seq-attr}
       \<\ceu{\Attr{v}{a}};p,\alpha,m>
       &\step{n}\<p,\alpha,m'>
       &&\quad\text{with~$m'=m[v/\eval(a)]$}
-      \tag{$R_7$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:seq-break}
       \<\ceu{\Break;p},\alpha,m>
       &\step{n}\<\ceu{\Break},\alpha,m>
       &&
-      \tag{$R_8$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:seq}
       &\hskip-5.35em
       \AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
       \UIC{$\<p_1;p_2,\alpha,m>\step{n}\<p_1';p_2,\alpha',m'>$}
       \DP
       &&\quad\text{\MARK{if~$p_1\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
-      \tag{$R_9$}
-    \end{alignat*}\\[2\jot]
-    %%
-    \intertext{\emph{Loops}}
-    \begin{alignat*}{2}
+    \end{alignat}
+
+    \noindent\emph{Loops}
+    \begin{alignat}{2}
+      \label{def:orig:inner:loop}
       \<\ceu{\Loop p},\alpha,m>
       &\step{n}\<\ceu{p\Atloop{p}},\alpha,m>
       &&
-      \tag{$R_{10}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:atloop-attr}
       \<\ceu{\Attr{v}{a}\Atloop{p}},\alpha,m>
       &\step{n}\<\ceu{\Loop{p}},\alpha,m'>
       &&\quad\text{with~$m'=m[v/\eval(a)]$}
-      \tag{$R_{11}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:atloop-break}
       \<\ceu{\Break\Atloop{p}},\alpha,m>
       &\step{n}\<\ceu{\Skip},\alpha,m>
       &&
-      \tag{$R_{12}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:atloop}
       &\hskip-7.75em
       \AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\Atloop{p_2}},\alpha,m>
         \step{n}\<\ceu{p_1'\Atloop{p_2}},\alpha',m'>$}
       \DP
       &&\quad\text{\MARK{if~$p_1\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
-      \tag{$R_{13}$}
-    \end{alignat*}\\[2\jot]
-    %%
-    \intertext{\emph{Par/and}}
-    \begin{alignat*}{2}
+    \end{alignat}
+
+    \noindent\emph{Par/and}
+    \begin{alignat}{2}
+      \label{def:orig:inner:and-attr-left}
       &\<\ceu{\Attr{v}{a}\And{p}},\alpha,m>
       \step{n}\<p,\alpha,m'>
       &&\quad\text{with~$m'=m[v/\eval(a)]$}
-      \tag{$R_{14}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:and-attr-right}
       &\<\ceu{p\And\Attr{v}{a}},\alpha,m>
       \step{n}\<p,\alpha,m'>
       &&\quad\text{with~$m'=m[v/\eval(a)]$}
-      \tag{$R_{15}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:and-break-left}
       &\<\ceu{\Break\And\;p},\alpha,m>
       \step{n}\<\ceu{p';\Break},\alpha,m>
       &&\quad\parbox{11em}{\MARK{if~$p\ne\ceu{\Attr{v}{a}}$},\\
         \strut\quad with~$p'=\clear(p)$}
-      \tag{$R_{16}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:and-break-right}
       &\<\ceu{p\And\Break},\alpha,m>
       \step{n}\<\ceu{p';\Break},\alpha,m>
       &&\quad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
         \strut\quad with~$p'=\clear(p)$}
-      \tag{$R_{17}$}\\[1\jot]
+      \\[1\jot]
       %%
       &
+      \label{def:orig:inner:and-left}
       \AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\And{p_2}},\alpha,m>\step{n}
         \<\ceu{p_1'\And{p_2}},\alpha',m'>$}
       \DP
       &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=0$\\
         \strut\quad and~\MARK{$p_1\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
-      \tag{$R_{18}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:and-right}
       &\AXC{$\<p_2,\alpha,m>\step{n}\<p_2',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\And{p_2}},\alpha,m>\step{n}
         \<\ceu{p_1\And{p_2'}},\alpha',m'>$}
       \DP
       &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=1$\\
         \strut\quad and~\MARK{$p_2\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
-      \tag{$R_{19}$}
-    \end{alignat*}\\[2\jot]
-    %%
-    \intertext{\emph{Par/or}}
-    \begin{alignat*}{2}
+    \end{alignat}
+
+    \noindent\emph{Par/or}
+    \begin{alignat}{2}
+      \label{def:orig:inner:or-attr-left}
       &\<\ceu{\Attr{v}{a}\Or{p}},\alpha,m>
       \step{n}\<p',\alpha,m'>
       &&\quad\parbox{11em}{with~$m'=m[v/\eval(a)]$\\
         \strut\quad and~$p'=\clear(p)$}
-      \tag{$R_{20}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:or-attr-right}
       &\<\ceu{p\Or\Attr{v}{a}},\alpha,m>
       \step{n}\<p',\alpha,m'>
       &&\quad\parbox{11em}{if~$\blocked(p,\alpha,n)=1$,\\
         \strut\quad with~$m'=m[v/\eval(a)]$\\
         \strut\quad and~$p'=\clear(p)$}
-      \tag{$R_{21}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:or-break-left}
       &\<\ceu{\Break\Or\;p},\alpha,m>
       \step{n}\<\ceu{p';\Break},\alpha,m>
       &&\quad\text{with~$p'=\clear(p)$}
-      \tag{$R_{22}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:or-break-right}
       &\<\ceu{p\Or\Break},\alpha,m>
       \step{n}\<\ceu{p';\Break},\alpha,m>
       &&\quad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
         \strut\quad with~$p'=\clear(p)$}
-      \tag{$R_{23}$}\\[1\jot]
+      \\[1\jot]
       %%
-      &
-      \AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
+      \label{def:orig:inner:or-left}
+      &\AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\Or{p_2}},\alpha,m>\step{n}
         \<\ceu{p_1'\Or{p_2}},\alpha',m'>$}
       \DP
       &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=0$\\
         \strut\quad and~\MARK{$p_1\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
-      \tag{$R_{24}$}\\[1\jot]
+      \\[1\jot]
       %%
+      \label{def:orig:inner:or-right}
       &\AXC{$\<p_2,\alpha,m>\step{n}\<p_2',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\Or{p_2}},\alpha,m>\step{n}
         \<\ceu{p_1\Or{p_2'}},\alpha',m'>$}
       \DP
       &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=1$\\
         \strut\quad and~\MARK{$p_2\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
-      \tag{$R_{25}$}
-    \end{alignat*}
-  \end{gather*}
+    \end{alignat}
 \end{definition}
 
-The next theorem establishes that the reaction small-step relation is
+The next theorem establishes that the reaction inner-step relation is
 deterministic, i.e., that it is in fact a \emph{partial} function.
 
-\begin{theorem}[label={thm:det-small-step},
-name={Determinism of the small-step relation}]
+\begin{theorem}[label={thm:orig:det-inner},
+name={Determinism of the inner-step relation}]
 For all~$p$, $p_1$, $p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$,
 $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
 \begin{gather*}
@@ -519,35 +546,48 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
   rules to evaluate such programs.)
   \begin{case}
   \item$p=\ceu{\Await(e)}$, for some~$e\in{E}$.  Then~$d_1$ and~$d_2$ are
-    instances of axiom~$R_1$, and as such, $p_1=p_2=\ceu{\Awaiting(e,n')}$
-    with~$n'=n+1$, and $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
+    instances of axiom~\eqref{def:orig:inner:await}, and as such,
+    $p_1=p_2=\ceu{\Awaiting(e,n')}$ with~$n'=n+1$, and
+    $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{\Awaiting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
+    Then~$d_1$ and~$d_2$ are instances of
+    axiom~\eqref{def:orig:inner:awaiting}, with~$n'\le{n}$.
+    Thus~$p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
     %%
   \item$p=\ceu{\Emit(e)}$, for some~$e\in{E}$.  Then~$d_1$ and~$d_2$ are
-    instances of axiom~$R_3$, and as such, $p_1=p2=\ceu{\Emitting(n')}$
-    with~$n'=\|\alpha|$, and~$\alpha_1=\alpha_2=e\alpha$ and~$m_1=m_2=m$.
+    instances of axiom~\eqref{def:orig:inner:emit}, and as such,
+    $p_1=p2=\ceu{\Emitting(n')}$ with~$n'=\|\alpha|$,
+    and~$\alpha_1=\alpha_2=e\alpha$ and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{\Emitting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
+    Then~$d_1$ and~$d_2$ are instances of
+    axiom~\eqref{def:orig:inner:emitting} with~$n'=\|\alpha|$.
+    Thus~$p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
     %%
   \item$p=\ceu{\Ifelse{b}{p'}{p''}}$, for some~$b\in{B}$ and~$p'$,
     $p''\in{P}$.
     \begin{case}
-    \item$\eval(b,m)=1$.  Then~$d_1$ and~$d_2$ are instances of axiom~$R_5$,
-      and as such, $p_1=p_2=p'$, $\alpha_1=\alpha_2=\alpha$,
-      and~$m_1=m_2=m$.
-    \item$\eval(b,m)=0$.  Then~$d_1$ and~$d_2$ are instances of axiom~$R_6$,
-      and as such, $p_1=p_2=p''$, $\alpha_1=\alpha_2=\alpha$,
-      and~$m_1=m_2=m$.
+    \item$\eval(b,m)=1$.  Then~$d_1$ and~$d_2$ are instances of
+      axiom~\eqref{def:orig:inner:if-true}, and as such, $p_1=p_2=p'$,
+      $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+    \item$\eval(b,m)=0$.  Then~$d_1$ and~$d_2$ are instances of
+      axiom~\eqref{def:orig:inner:if-false}, and as such, $p_1=p_2=p''$,
+      $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
     \end{case}
   \item$p=\ceu{p';p''}$, for some~$p'$, $p''\in{P}$.
     \begin{case}
     \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.
-      Then~$d_1$ and~$d_2$ are instances of axiom~$R_7$, and as such,
-      $p_1=p_2=p''$, $\alpha_1=\alpha_2=\alpha$ and, as~$\eval$ is a total
-      function, $m_1=m_2=m[v/\eval(a)]$.
+      Then~$d_1$ and~$d_2$ are instances of
+      axiom~\eqref{def:orig:inner:seq-attr}, and as such, $p_1=p_2=p''$,
+      $\alpha_1=\alpha_2=\alpha$ and, as~$\eval$ is a total function,
+      $m_1=m_2=m[v/\eval(a)]$.
     \item$p'=\ceu{\Break}$.  Then~$d_1$ and~$d_2$ are instances of
-      axiom~$R_8$, and as such, $p_1=p_2=p'$, $\alpha_1=\alpha_2=\alpha$
-      and~$m_1=m_2=m$.
+      axiom~\eqref{def:orig:inner:seq-break}, and as such, $p_1=p_2=p'$,
+      $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
     \item$p'\ne\ceu{\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$ and~$d_2$ are
-      instances of rule~$R_9$.  Thus there are derivations~$d_1'$ and~$d_2'$
-      such that
+      instances of rule~\eqref{def:orig:inner:seq}.  Thus there are
+      derivations~$d_1'$ and~$d_2'$ such that
       \begin{align*}
         d_1'\Vdash\<p',\alpha,m>\step{n}\<p_1',\alpha_1,m_1>
         \quad\text{and}\quad
@@ -560,34 +600,68 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
         p_1=p_1';p''=p_2';p''=p_2.
       \]
     \end{case}
+    %%
   \item$p=\ceu{\Loop{p'}}$, for some~$p'\in{P}$.  Then~$d_1$ and~$d_2$ are
-    instances of axiom~$R_{10}$, and as such, $p_1=p_2=\ceu{p'\Atloop{p'}}$,
-    $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
-  \item\label{thm:det-small-step:and}$p=\ceu{p'\And{p''}}$, for some~$p'$,
+    instances of axiom~\eqref{def:orig:inner:loop}, and as such,
+    $p_1=p_2=\ceu{p'\Atloop{p'}}$, $\alpha_1=\alpha_2=\alpha$,
+    and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{p'\Atloop{p''}}$, for some~$p'$, $p''\in{P}$.
+    \begin{case}
+    \item$p=\ceu{\Attr{v}{a}\Atloop{p'}}$, for some~$a\in{A}$, $v\in{V}$,
+      and~$p'\in{P}$.  Then~$d_1$ and~$d_2$ are instances
+      of~\eqref{def:orig:inner:atloop-attr}, and as such,
+      $p_1=p_2=\ceu{\Loop{p'}}$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$
+      is a total function, $m_1=m_2=m[v/\eval(a)]$.
+    \item$p=\ceu{\Break\Atloop{p'}}$, for some~$p'\in{P}$.  Then~$d_1$
+      and~$d_2$ are instances of axiom~\eqref{def:orig:inner:atloop-break},
+      and as such, $p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$,
+      and~$m_1=m_2=m$.
+    \item$p=\ceu{p'\Atloop{p''}}$, for some~$p'$, $p''\in{P}$ such
+      that~$p'\ne\ceu{\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$ and~$d_2$ are
+      instances of rule~\eqref{def:orig:inner:atloop}.  Thus there are
+      derivations~$d_1'$ and~$d_2'$ such that
+      \[
+        d_1'\Vdash\<p',\alpha,m>\step{n}\<p_1',\alpha_1,m_1>
+        \quad\text{and}\quad
+        d_2'\Vdash\<p',\alpha,m>\step{n}\<p_2',\alpha_2,m_2>,
+      \]
+      for some~$p_1'$, $p_2'\in{P}$.  Since~$d_1'\prec{d_1}$
+      and~$d_2'\prec{d_2}$, by induction hypothesis, $\alpha_1=\alpha$,
+      $m_1=m_2$, and~$p_1'=p_2'$, which implies
+      \[
+        p_1=\ceu{p_1'\Atloop{p''}}=\ceu{p_2'\Atloop{p''}}=p_2.
+      \]
+    \end{case}
+    %%
+  \item\label{thm:orig:det-inner:and} $p=\ceu{p'\And{p''}}$, for some~$p'$,
     $p''\in{P}$.
     \begin{case}
-    \item\label{thm:det-small-step:and1}$p=\ceu{\Attr{v}{a}\And{p'}}$, for
-      some~$v\in{V}$, $a\in{A}$ and~$p'\in{P}$.  Then~$d_1$ and~$d_2$ are
-      instances of axiom~$R_{14}$, and as such, $p_1=p_2=p'$,
+    \item\label{thm:orig:det-inner:and-attr-left}
+      $p=\ceu{\Attr{v}{a}\And{p'}}$, for some~$v\in{V}$, $a\in{A}$
+      and~$p'\in{P}$.  Then~$d_1$ and~$d_2$ are instances of
+      axiom~\eqref{def:orig:inner:and-attr-left}, and as such, $p_1=p_2=p'$,
       $\alpha_1=\alpha_2=\alpha$, and as such, as~$\eval$ is a total
       function, $m_1=m_2=m[v/\eval(a)]$.
     \item$p=\ceu{p'\And\Attr{v}{a}}$, for some~$v\in{V}$, $a\in{A}$
-      and~$p'\in{P}$.  Similar to \Cref{thm:det-small-step:and1}.
+      and~$p'\in{P}$.  Similar to \Cref{thm:orig:det-inner:and-attr-left}.
     \item$p=\ceu{\Break\And{p'}}$, for some~$p'\in{P}$.  Then~$d_1$
-      and~$d_2$ are instances of axiom~$R_{16}$, and as such,
+      and~$d_2$ are instances of
+      axiom~\eqref{def:orig:inner:and-break-left}, and as such,
       $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
       function, $p_1=p_2=\ceu{\clear(p');\Break}$.
     \item$p=\ceu{{p'}\And\Break}$, for some~$p'\in{P}$.  Then
       either~$\blocked(p')=0$ or~$\blocked(p')=1$.  If~$\blocked(p')=0$ then
-      this case becomes \Cref{thm:det-small-step:and5}.  Otherwise,
+      this case becomes \Cref{thm:orig:det-inner:and-left}.  Otherwise,
       if~$\blocked(p')=1$, then~$d_1$ and~$d_2$ are instances of
-      axiom~$R_{17}$, and as such, $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$,
-      and as~$\clear$ is a total function,
-      $p_1=p_2=\ceu{\clear(p');\Break}$.
-    \item\label{thm:det-small-step:and5}$p=\ceu{p'\And{p''}}$, for some~$p'$
-      and~$p''$.  Then there are two possibilities.  If~$\blocked(p')=0$
-      then~$d_1$ and~$d_2$ are instances of~$R_{18}$.  Thus there are
-      derivations~$d_1'$ and~$d_2'$ such that
+      axiom~\eqref{def:orig:inner:and-break-right}, and as such,
+      $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
+      function, $p_1=p_2=\ceu{\clear(p');\Break}$.
+    \item\label{thm:orig:det-inner:and-left} $p=\ceu{p'\And{p''}}$, for
+      some~$p'$ and~$p''$.  Then there are two possibilities.
+      If~$\blocked(p')=0$ then~$d_1$ and~$d_2$ are instances
+      of~\eqref{def:orig:inner:and-left}.  Thus there are derivations~$d_1'$
+      and~$d_2'$ such that
       \[
         d_1'\Vdash\<p',\alpha,m>\step{n}\<p_1',\alpha_1,m_1>
         \quad\text{and}\quad
@@ -601,7 +675,8 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
       \]
 
       If, however, $\blocked(p')=1$, then~$d_1$ and~$d_2$ are instances
-      of~$R_{19}$.  Thus there are derivations~$d_1''$ and~$d_2''$ such that
+      of~~\eqref{def:orig:inner:and-right}.  Thus there are
+      derivations~$d_1''$ and~$d_2''$ such that
       \[
         d_1''\Vdash\<p'',\alpha,m>\step{n}\<p_1'',\alpha_1,m_1>
         \quad\text{and}\quad
@@ -614,39 +689,83 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
         p_1=(\ceu{p'\And{p_1''}})=(\ceu{p'\And{p_2''}})=p_2.
       \]
     \end{case}
+    %%
   \item$p=\ceu{p'\Or{p''}}$, for some~$p'$, $p''\in{P}$.  \TODO{Similar to
-      \Cref{thm:det-small-step:and} (we hope).}
-  \item$p=\ceu{\Awaiting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
-    Then~$d_1$ and~$d_2$ are instances of axiom~$R_2$, with~$n'\le{n}$.
-    Thus~$p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
-  \item$p=\ceu{\Emitting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
-    Then~$d_1$ and~$d_2$ are instances of axiom~$R_4$ with~$n'=\|\alpha|$.
-    Thus~$p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
-  \item$p=\ceu{p'\Atloop{p''}}$, for some~$p'$, $p''\in{P}$.
-    \begin{case}
-    \item$p=\ceu{\Attr{v}{a}\Atloop{p'}}$, for some~$a\in{A}$, $v\in{V}$,
-      and~$p'\in{P}$.  Then~$d_1$ and~$d_2$ are instances of~$R_{11}$, and
-      as such, $p_1=p_2=\ceu{\Loop{p'}}$, $\alpha_1=\alpha_2=\alpha$, and
-      as~$\eval$ is a total function, $m_1=m_2=m[v/\eval(a)]$.
-    \item$p=\ceu{\Break\Atloop{p'}}$, for some~$p'\in{P}$.  Then~$d_1$
-      and~$d_2$ are instances of axiom~$R_{12}$, and as such,
-      $p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
-    \item$p=\ceu{p'\Atloop{p''}}$, for some~$p'$, $p''\in{P}$ such
-      that~$p'\ne\ceu{\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$ and~$d_2$ are
-      instances of rule~$R_{13}$.  Thus there are derivations~$d_1'$
-      and~$d_2'$ such that
-      \[
-        d_1'\Vdash\<p',\alpha,m>\step{n}\<p_1',\alpha_1,m_1>
-        \quad\text{and}\quad
-        d_2'\Vdash\<p',\alpha,m>\step{n}\<p_2',\alpha_2,m_2>,
-      \]
-      for some~$p_1'$, $p_2'\in{P}$.  Since~$d_1'\prec{d_1}$
-      and~$d_2'\prec{d_2}$, by induction hypothesis, $\alpha_1=\alpha$,
-      $m_1=m_2$, and~$p_1'=p_2'$, which implies
-      \[
-        p_1=\ceu{p_1'\Atloop{p''}}=\ceu{p_2'\Atloop{p''}}=p_2.\qedhere
-      \]
-    \end{case}
+      \Cref{thm:orig:det-inner:and} (we hope).}
   \end{case}
 \end{proof}
+
+The next lemma establishes that given a program either it is possible to
+advance it by an inner-step or all its trails are blocked, but not both.
+
+\begin{lemma}[label={lem:orig:inner-step-or-blocked}]
+  For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
+  if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then either
+  \[
+    \exists{\delta\in\Delta}(\<p,\alpha,m>\step{n}\delta)
+    \quad\text{or}\quad
+    \blocked(p,\alpha,n)=1,
+  \]
+  but not both.
+\end{lemma}
+\begin{proof}
+  \TODO{By induction on the structure of programs.}
+\end{proof}
+
+
+\subsection{The reaction outer-step relation}
+\label{sub:orig:outer}
+
+From the previous inner-step relation we define an outer-step
+relation~($\ostep{}$) that when necessary pops the event stack advances
+blocked programs.  \TODO{Improve this description.}
+
+\begin{definition}[label={def:orig:outer-step},name={Reaction outer-step}]
+  \begin{alignat}{2}
+    \label{def:orig:outer:advance}
+    &\AXC{$\<p,\alpha,m>\step{n}\<p',\alpha',m'>$}
+    \UIC{$\<p,\alpha,m>\ostep{n}\<p',\alpha',m'>$}
+    \DP
+    &&\quad\text{if~$\blocked(p,\alpha,n)=0$}
+    \\[1\jot]
+    %%
+    \label{def:orig:outer:pop}
+    &\hskip-.45em\<p,e\alpha,m>\ostep{n}\<p,\alpha,m>
+    &&\quad\text{if~$\blocked(p,\alpha,n)=1$}
+  \end{alignat}
+\end{definition}
+
+\begin{theorem}[label={thm:orig:det-outer},
+  name={Determinism of the outer-step relation}]
+  For all~$p$, $p_1$, $p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$,
+  $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
+  \begin{gather*}
+    \text{if}\quad\<p,\alpha,m>\ostep{n}\<p_1,\alpha_1,m_1>
+    \quad\text{and}\quad
+    \<p,\alpha,m>\ostep{n}\<p_2,\alpha_2,m_2>,\\
+    \text{then}\quad\<p_1,\alpha_1,m_1>=\<p_2,\alpha_2,m_2>.
+  \end{gather*}
+\end{theorem}
+\begin{proof}
+  \TODO{By induction on the structure of derivations.}
+\end{proof}
+
+\begin{theorem}[label={thm:orig:term-outer},
+  name={Termination of the outer-step relation}]
+  For all~$p\in{P}$, $\alpha\in{E}$, and~$m\in\mathcal{M}$,
+  if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then
+  \[
+    \exists{\delta\in\Delta}(\<p,\alpha,m>\ostep{n}\delta).
+  \]
+\end{theorem}
+
+
+\subsection{The reaction relation}
+\label{sub:orig:reaction}
+
+From the outer-step relation we define the reaction relation, which computes
+a full program reaction.
+
+\TODO{Definition ($\ostep\ast$), determinism, and termination}.
+
 \end{document}
