@@ -115,6 +115,7 @@
 \def\stepx#1{\@raise{$\step{#1}$}{-.75ex}{\ast}}
 \def\ostep#1{\@raise{$\Rightarrow$}{1.1ex}{#1}}
 \def\ostepx#1{\@raise{$\ostep{#1}$}{-.75ex}{\ast}}
+\def\react#1{\@raise{$\vDash$}{1.3ex}{#1}}
 \makeatother
 %-
 \makeatletter
@@ -766,9 +767,120 @@ blocked programs.  \TODO{Improve this description.}
 \subsection{The reaction relation}
 \label{sub:orig:reaction}
 
-From the outer-step relation we define the reaction relation, which computes
-a full program reaction.
+From the reflexive-transitive closure of the outer-step
+relation~($\ostep{\ast}$) we define the reaction
+relation~$\react{}\subseteq\Delta\times(P\times\mathcal{M}\times{N})$, which
+computes a full program reaction.  Given an initial configuration, the
+reaction relation evaluates it until the event stack becomes empty.
 
-\TODO{Definition ($\ostep\ast$), determinism, and termination}.
+\begin{definition}[label={def:orig:reaction},name={Reaction}]
+  Let~$p$, $p'\in{P}$, $\alpha\in{E^*}$, $m$, $m'\in\mathcal{M}$.  Then
+  \[
+    \<p,\alpha,m>\react{n}\<p',m'>
+    \quad\text{iff}\quad
+    \<p,\alpha,m>\ostep\ast\<p',\nil,m'>.
+  \]
+\end{definition}
+
+The next two theorems establish, respectively, that reactions are
+deterministic and always terminate (for the nontrivial
+programs~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$).
+
+\begin{theorem}[label={thm:orig:det-react},
+  name={Determinism of the reaction relation}]
+  For all~$p$, $p_1$, $p_2\in{P}$, $\alpha\in{E^*}$, $m$, $m_1$,
+  $m_2\in\mathcal{M}$, and~$n\in{N}$,
+  \begin{gather*}
+    \text{if}\quad\<p,\alpha,m>\react{n}\<p_1,m_1>
+    \quad\text{and}\quad
+    \<p,\alpha,m>\react{n}\<p_2,m_2>,\\
+    \text{then}\quad\<p_1,m_1>=\<p_2,m_2>.
+  \end{gather*}
+\end{theorem}
+\begin{proof}
+  \TODO{?}
+\end{proof}
+
+\begin{theorem}[label={thm:orig:term-react},
+  name={Termination of the reaction relation}]
+  For all~$p\in{P}$, $\alpha\in{E}$, and~$m\in\mathcal{M}$,
+  if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then
+  \[
+    \<p,\alpha,m>\react{n}\<p',m'>,
+  \]
+  for some~$p'\in{P}$ and~$m'\in\mathcal{M}$.
+\end{theorem}
+\begin{proof}
+  \TODO{?}
+\end{proof}
+
+
+\section{Big-step version of the original formulation}
+\label{sec:big}
+
+\TODO{Minha ideia aqui é fazer uma versão big-step da formulação original.
+  E no final comparar as duas versões, i.e., mostrar que são equivalentes.}
+
+\begin{definition}
+  \TODO{Parcial e provavelmente incorreta.}
+
+  \noindent\emph{Empty program}
+  \begin{equation}
+    \<\nil,\alpha,m,n>\leadsto\<\alpha,m,n>
+  \end{equation}
+
+  \noindent\emph{Assignment}
+  \begin{equation}
+    \<\ceu{\Attr{v}{a}},\alpha,m,n>\leadsto\<\alpha,m[v/\eval(a)],n>
+  \end{equation}
+
+  \noindent\emph{Conditionals}
+  \begin{alignat}{2}
+    &\AXC{$\<p_1,\alpha,m,n>\leadsto\<\alpha',m',n'>$}
+    \UIC{$\<\ceu{\Ifelse{b}{p_1}{p_2}},\alpha,m,n>
+      \leadsto\<\alpha',m',n'>$}
+    \DP
+    &&\quad\text{if~$\eval(b,m)=1$}\\
+    %%
+    &\AXC{$\<p_2,\alpha,m,n>\leadsto\<\alpha',m',n'>$}
+    \UIC{$\<\ceu{\Ifelse{b}{p_1}{p_2}},\alpha,m,n>
+      \leadsto\<\alpha',m',n'>$}
+    \DP
+    &&\quad\text{if~$\eval(b,m)=0$}
+  \end{alignat}
+
+  \noindent\emph{Await}
+  \begin{alignat}{2}
+    &\AXC{$\<\ceu{\Awaiting(e,n+1)},e\alpha,m,n>\leadsto\<\alpha',m',n'>$}
+    \UIC{$\<\ceu{\Await(e)},\alpha,m,n>\leadsto\<\alpha',m',n'>$}
+    \DP
+    &&\\[1\jot]
+    %%
+    &\<\ceu{\Awaiting(e',n')},e\alpha,m,n>\leadsto\<\alpha,m,n>
+    &&\quad\text{if~$e'=e$ and~$n'<n$}\\[1\jot]
+    %%
+    &\AXC{$\<\ceu{\Awaiting(e',n')},\alpha,m,n>\leadsto\<\alpha'',m'',n''>$}
+    \UIC{$\<\ceu{\Awaiting(e',n')},e\alpha,m,n>\leadsto\<\alpha'',m'',n''>$}
+    \DP
+    &&\quad\text{if~$e'\ne{e}$ or~$n'\ge{n}$}
+  \end{alignat}
+
+  \noindent\emph{Emit}
+  \begin{alignat}{2}
+    &\AXC{$\<\ceu{\Emitting(\|\alpha|)},e\alpha,m,n>
+      \leadsto\<\alpha',m',n'>$}
+    \UIC{$\<\ceu{\Emit(e)},\alpha,m,n>\leadsto\<\alpha',m',n'>$}
+    \DP
+    &&\\[1\jot]
+    %%
+    &\<\ceu{\Emitting(n')},e\alpha,m,n>\leadsto\<\alpha,m,n>
+    &&\quad\text{if~$\|e\alpha|={n'}$}\\[1\jot]
+    %%
+    &\AXC{$\<\ceu{\Emitting(n')},\alpha,m,n>\leadsto\<\alpha'',m'',n''>$}
+    \UIC{$\<\ceu{\Emitting(n')},e\alpha,m,n>\leadsto\<\alpha'',m'',n''>$}
+    \DP
+    &&\quad\text{if~$\|e\alpha|\ne{n'}$}
+  \end{alignat}
+\end{definition}
 
 \end{document}
