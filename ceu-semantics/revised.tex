@@ -235,6 +235,9 @@ program.
   Function~$\blocked\colon{P\times{E^*}\times{N}}\to\{0,1\}$ is defined
   inductively as follows.
   \begin{align*}
+    \MARK{\blocked(\ceu{\Skip},e\alpha,n)}
+    &\MARK{=0}\\
+    %%
     \blocked(\ceu{\Attr{v}{a}},e\alpha,n)
     &=0\\
     %%
@@ -247,7 +250,7 @@ program.
     \blocked(\ceu{\Break},e\alpha,n)
     &=0\\
     %%
-    \blocked(\ceu{\Ifelse{v}{p_1}{p_2}},e\alpha,n)
+    \blocked(\ceu{\Ifelse{b}{p_1}{p_2}},e\alpha,n)
     &=0\\
     %%
     \blocked(\ceu{p_1;p_2},e\alpha,n)
@@ -285,10 +288,11 @@ program.
 \end{definition}
 
 \begin{definition}[label={def:orig:clear}]
-  Function $\clear\colon{P}\to{P}$ is defined inductively as follows.
+  Function $\clear\colon{P}\to{P'}$, \MARK{where $P'=\{\ceu{\Attr{v}{a}}\}$}, 
+  is defined inductively as follows.
 \begin{align*}
     \clear(\ceu{\Attr{v}{a}})
-    &=\ceu{\Skip}\\
+    &=\ceu{\MARK{\Attr{v}{a}}}\\
     %%
     \clear(\ceu{\Await(e')})
     &=\ceu{\Skip}\\
@@ -374,6 +378,12 @@ program.
 
     \noindent\emph{Sequences}
     \begin{alignat}{2}
+      \label{def:orig:inner:seq-skip}
+      \MARK{\<\ceu\Skip;p,\alpha,m>}
+      &\MARK{\step{n}\<p,\alpha,m>}
+      &&
+      \\[1\jot]
+      %%
       \label{def:orig:inner:seq-attr}
       \<\ceu{\Attr{v}{a}};p,\alpha,m>
       &\step{n}\<p,\alpha,m'>
@@ -391,7 +401,7 @@ program.
       \AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
       \UIC{$\<p_1;p_2,\alpha,m>\step{n}\<p_1';p_2,\alpha',m'>$}
       \DP
-      &&\quad\text{\MARK{if~$p_1\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+      &&\quad\text{\MARK{if~$p_1\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 
     \noindent\emph{Loops}
@@ -399,6 +409,12 @@ program.
       \label{def:orig:inner:loop}
       \<\ceu{\Loop p},\alpha,m>
       &\step{n}\<\ceu{p\Atloop{p}},\alpha,m>
+      &&
+      \\[1\jot]
+      %%
+      \label{def:orig:inner:atloop-skip}
+      \MARK{\<\ceu{\Skip\Atloop{p}},\alpha,m>}
+      &\MARK{\step{n}\<\ceu{\Loop{p}},\alpha,m>}
       &&
       \\[1\jot]
       %%
@@ -420,11 +436,23 @@ program.
       \UIC{$\<\ceu{p_1\Atloop{p_2}},\alpha,m>
         \step{n}\<\ceu{p_1'\Atloop{p_2}},\alpha',m'>$}
       \DP
-      &&\quad\text{\MARK{if~$p_1\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+      &&\quad\text{\MARK{if~$p_1\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 
     \noindent\emph{Par/and}
     \begin{alignat}{2}
+      \label{def:orig:inner:and-skip-left}
+      &\MARK{\<\ceu{\Skip\And{\;p}},\alpha,m>}
+      \MARK{\step{n}\<p,\alpha,m>}
+      &&
+      \\[1\jot]
+      %%
+      \label{def:orig:inner:and-skip-right}
+      &\MARK{\<\ceu{p\And\Skip},\alpha,m>}
+      \MARK{\step{n}\<p,\alpha,m>}
+      &&
+      \\[1\jot]
+      %%
       \label{def:orig:inner:and-attr-left}
       &\<\ceu{\Attr{v}{a}\And{p}},\alpha,m>
       \step{n}\<p,\alpha,m'>
@@ -440,7 +468,7 @@ program.
       \label{def:orig:inner:and-break-left}
       &\<\ceu{\Break\And\;p},\alpha,m>
       \step{n}\<\ceu{p';\Break},\alpha,m>
-      &&\quad\parbox{11em}{\MARK{if~$p\ne\ceu{\Attr{v}{a}}$},\\
+      &&\quad\parbox{11em}{\MARK{if~$p\ne\ceu{\Skip,\Attr{v}{a}}$},\\
         \strut\quad with~$p'=\clear(p)$}
       \\[1\jot]
       %%
@@ -458,7 +486,7 @@ program.
         \<\ceu{p_1'\And{p_2}},\alpha',m'>$}
       \DP
       &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=0$\\
-        \strut\quad and~\MARK{$p_1\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+        \strut and~\MARK{$p_1\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
       \\[1\jot]
       %%
       \label{def:orig:inner:and-right}
@@ -467,11 +495,24 @@ program.
         \<\ceu{p_1\And{p_2'}},\alpha',m'>$}
       \DP
       &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=1$\\
-        \strut\quad and~\MARK{$p_2\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+        \strut and~\MARK{$p_2\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 
     \noindent\emph{Par/or}
     \begin{alignat}{2}
+      \label{def:orig:inner:or-skip-left}
+      &\MARK{\<\ceu{\Skip\Or{\;p}},\alpha,m>}
+      \MARK{\step{n}\<p',\alpha,m>}
+      &&\quad\parbox{11em}{\MARK{$p'=\clear(p)$}}
+      \\[1\jot]
+      %%
+      \label{def:orig:inner:or-skip-right}
+      &\MARK{\<\ceu{p\Or\Skip},\alpha,m>}
+      \MARK{\step{n}\<p',\alpha,m>}
+      &&\quad\parbox{11em}{\MARK{if~$\blocked(p,\alpha,n)=1$,\\
+        \strut\quad and~$p'=\clear(p)$}}
+      \\[1\jot]
+      %%
       \label{def:orig:inner:or-attr-left}
       &\<\ceu{\Attr{v}{a}\Or{p}},\alpha,m>
       \step{n}\<p',\alpha,m'>
@@ -506,7 +547,7 @@ program.
         \<\ceu{p_1'\Or{p_2}},\alpha',m'>$}
       \DP
       &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=0$\\
-        \strut\quad and~\MARK{$p_1\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+        \strut\quad and~\MARK{$p_1\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
       \\[1\jot]
       %%
       \label{def:orig:inner:or-right}
@@ -515,7 +556,7 @@ program.
         \<\ceu{p_1\Or{p_2'}},\alpha',m'>$}
       \DP
       &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=1$\\
-        \strut\quad and~\MARK{$p_2\ne\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+        \strut\quad and~\MARK{$p_2\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 \end{definition}
 
