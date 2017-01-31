@@ -6,14 +6,18 @@
 \usepackage[protrusion=true,expansion]{microtype}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue}%
-\newcommand{\MARK}[1]{\textcolor{red}{#1}}%
-\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}%
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage[varg]{txfonts}
 \usepackage{mathtools}
 \usepackage[nameinlink]{cleveref}
+%-
+\newcommand{\MARK}[1]{\textcolor{red}{#1}}
+\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\FIXME}[1]{\textcolor{red}{[FIXME: #1]}}
+\usepackage[textwidth=3.7cm,textsize=scriptsize,shadow]{todonotes}
+\setlength{\marginparwidth}{3.7cm}
 %-
 \usepackage{enumitem}
 \setlist{noitemsep}
@@ -121,7 +125,8 @@
 \makeatletter
 \def\@ceuop#1{\mathop{\texttt{#1}}}%
 \def\@ceubin#1{\mathbin{\texttt{#1}}}%
-\def\ceu#1{%
+\def\ceu{\protect\@ceu}
+\def\@ceu#1{%
   \bgroup
   \def\Skip{\@ceuop{skip}}%
   \def\Mem{\@ceuop{mem}}%
@@ -166,6 +171,14 @@ original definitions are duly noted in the text.
 
 The \emph{abstract syntax} of \Ceu\ programs is given by the following
 grammar:
+%%
+\todo{%
+  (1)~$\ceu{\protect\Skip}$ precisa aparecer na gramática já que
+  aprece nos programas em~$P$.\newline
+  %%
+  (2)~Atribuição agora aparece explicitamente na gramática.  Expressões
+  aritméticas e booleanas também estão na gramática mas a sua estrutura
+  interna é omitida.}
 %%
 \bgroup
 \vskip\abovedisplayskip
@@ -288,8 +301,17 @@ program.
 \end{definition}
 
 \begin{definition}[label={def:orig:clear}]
-  Function $\clear\colon{P}\to{P'}$, \MARK{where $P'=\{\ceu{\Attr{v}{a}}\}$}, 
-  is defined inductively as follows.
+  Function $\clear\colon{P}\to{P'}$, \MARK{where
+    $P'=\{\ceu{\Attr{v}{a}}\}$}, is defined inductively as follows.
+  %%
+  \todo{(1)~Além de atribuições~$P'$ não deveria conter instruções
+    if-else?.\newline
+    %%
+    (2)~No artigo original, $\clear(p_1;p_2)$ retorna
+    apenas~$\clear(p_1)$.  Achamos que isso está errado, já que apenas o
+    primeiro~$\ceu{\protect\Fin}$ seria considerado.  (Confirmar com o
+    Chicão).}
+  %%
 \begin{align*}
     \clear(\ceu{\Attr{v}{a}})
     &=\ceu{\MARK{\Attr{v}{a}}}\\
@@ -335,6 +357,18 @@ program.
 \begin{definition}[label={def:orig:inner-step},name={Reaction inner-step}]
   Relation~$\step{\null}\subseteq\Delta\times\Delta$ is defined inductively
   as follows.
+  %%
+  \todo{(1)~Adicionamos o mapa de memória~($m$) à configuração e regras
+    explícitas para atribuição.  A avaliação de expressões aritméticas e
+    booleanas está encapsulada na função~$\eval$.\newline
+    %%
+    (2)~Adicionamos regras para consumir
+    instruções~$\ceu{\protect\Skip}$.\newline
+    %%
+    (3)~Adicionamos condições que garantem que a cada passo apenas uma regra
+    é aplicável---não há escolha.  Outra forma menos verbosa de fazer isso é
+    dizer que elas devem ser avaliadas na ordem em que foram declaradas.
+    Nesse caso, a primeira que for satisfeita deve ser aplicada.}
 
   \noindent\emph{Await and emit}
     \begin{alignat}{2}
@@ -401,7 +435,8 @@ program.
       \AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
       \UIC{$\<p_1;p_2,\alpha,m>\step{n}\<p_1';p_2,\alpha',m'>$}
       \DP
-      &&\quad\text{\MARK{if~$p_1\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+      &&\quad\text{\MARK{if~$p_1\ne\ceu{\Skip},
+          \ceu{\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 
     \noindent\emph{Loops}
@@ -436,128 +471,139 @@ program.
       \UIC{$\<\ceu{p_1\Atloop{p_2}},\alpha,m>
         \step{n}\<\ceu{p_1'\Atloop{p_2}},\alpha',m'>$}
       \DP
-      &&\quad\text{\MARK{if~$p_1\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
+      &&\quad\parbox{8em}{\MARK{if~$p_1\ne\ceu{\Skip}$,\\
+          \strut\enspace$\ceu{\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 
     \noindent\emph{Par/and}
+    %%
+    \todo{Adicionamos a condição de o lado esquerdo estar bloqueado na
+      regra~\ref{def:orig:inner:and-attr-right}.}
+    %%
     \begin{alignat}{2}
       \label{def:orig:inner:and-skip-left}
-      &\MARK{\<\ceu{\Skip\And{\;p}},\alpha,m>}
-      \MARK{\step{n}\<p,\alpha,m>}
+      \<\ceu{\Skip\And{\;p}},\alpha,m>
+      &\step{n}\<p,\alpha,m>
       &&
       \\[1\jot]
       %%
       \label{def:orig:inner:and-skip-right}
-      &\MARK{\<\ceu{p\And\Skip},\alpha,m>}
-      \MARK{\step{n}\<p,\alpha,m>}
+      \<\ceu{p\And\Skip},\alpha,m>
+      &\step{n}\<p,\alpha,m>
       &&
       \\[1\jot]
       %%
       \label{def:orig:inner:and-attr-left}
-      &\<\ceu{\Attr{v}{a}\And{p}},\alpha,m>
-      \step{n}\<p,\alpha,m'>
+      \<\ceu{\Attr{v}{a}\And{p}},\alpha,m>
+      &\step{n}\<p,\alpha,m'>
       &&\quad\text{with~$m'=m[v/\eval(a)]$}
       \\[1\jot]
       %%
       \label{def:orig:inner:and-attr-right}
-      &\<\ceu{p\And\Attr{v}{a}},\alpha,m>
-      \step{n}\<p,\alpha,m'>
+      \<\ceu{p\And\Attr{v}{a}},\alpha,m>
+      &\step{n}\<p,\alpha,m'>
       &&\quad\parbox{10em}{\MARK{if~$\blocked(p,\alpha,n)=1$,}\\
-        \strut\quad with~$m'=m[v/\eval(a)]$}
+        \strut\enspace with~$m'=m[v/\eval(a)]$}
       \\[1\jot]
       %%
       \label{def:orig:inner:and-break-left}
-      &\<\ceu{\Break\And\;p},\alpha,m>
-      \step{n}\<\ceu{p';\Break},\alpha,m>
-      &&\quad\parbox{11em}{\MARK{if~$p\ne\ceu{\Skip,\Attr{v}{a}}$},\\
-        \strut\quad with~$p'=\clear(p)$}
+      \<\ceu{\Break\And\;p},\alpha,m>
+      &\step{n}\<\ceu{p';\Break},\alpha,m>
+      &&\quad\parbox{10em}{\MARK{if~$p\ne\ceu{\Skip,\Attr{v}{a}}$},\\
+        \strut\enspace with~$p'=\clear(p)$}
       \\[1\jot]
       %%
       \label{def:orig:inner:and-break-right}
-      &\<\ceu{p\And\Break},\alpha,m>
-      \step{n}\<\ceu{p';\Break},\alpha,m>
+      \<\ceu{p\And\Break},\alpha,m>
+      &\step{n}\<\ceu{p';\Break},\alpha,m>
       &&\quad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
-        \strut\quad with~$p'=\clear(p)$}
+        \strut\enspace with~$p'=\clear(p)$}
       \\[1\jot]
       %%
-      &
+      &\hskip-6.9em
       \label{def:orig:inner:and-left}
       \AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\And{p_2}},\alpha,m>\step{n}
         \<\ceu{p_1'\And{p_2}},\alpha',m'>$}
       \DP
-      &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=0$\\
-        \strut and~\MARK{$p_1\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
+      &&\quad\parbox{10em}{if~$\blocked(p_1,\alpha,n)=0$\\
+        \strut\enspace and~\MARK{$p_1\ne\ceu{\Skip}$,\\
+        \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}
       \\[1\jot]
       %%
+      &\hskip-6.9em
       \label{def:orig:inner:and-right}
-      &\AXC{$\<p_2,\alpha,m>\step{n}\<p_2',\alpha',m'>$}
+      \AXC{$\<p_2,\alpha,m>\step{n}\<p_2',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\And{p_2}},\alpha,m>\step{n}
         \<\ceu{p_1\And{p_2'}},\alpha',m'>$}
       \DP
-      &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=1$\\
-        \strut and~\MARK{$p_2\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
+      &&\quad\parbox{10em}{if~$\blocked(p_1,\alpha,n)=1$\\
+        \strut\enspace and~\MARK{$p_2\ne\ceu{\Skip}$,\\
+        \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 
     \noindent\emph{Par/or}
     \begin{alignat}{2}
       \label{def:orig:inner:or-skip-left}
-      &\MARK{\<\ceu{\Skip\Or{\;p}},\alpha,m>}
-      \MARK{\step{n}\<p',\alpha,m>}
-      &&\quad\parbox{11em}{\MARK{$p'=\clear(p)$}}
+      \<\ceu{\Skip\Or{\;p}},\alpha,m>
+      &\step{n}\<p',\alpha,m>
+      &&\quad\parbox{11em}{\MARK{with~$p'=\clear(p)$}}
       \\[1\jot]
       %%
       \label{def:orig:inner:or-skip-right}
-      &\MARK{\<\ceu{p\Or\Skip},\alpha,m>}
-      \MARK{\step{n}\<p',\alpha,m>}
-      &&\quad\parbox{11em}{\MARK{if~$\blocked(p,\alpha,n)=1$,\\
-        \strut\quad and~$p'=\clear(p)$}}
+      \<\ceu{p\Or\Skip},\alpha,m>
+      &\step{n}\<p',\alpha,m>
+      &&\quad\parbox{10em}{\MARK{if~$\blocked(p,\alpha,n)=1$,\\
+        \strut\enspace with~$p'=\clear(p)$}}
       \\[1\jot]
       %%
       \label{def:orig:inner:or-attr-left}
-      &\<\ceu{\Attr{v}{a}\Or{p}},\alpha,m>
-      \step{n}\<p',\alpha,m'>
-      &&\quad\parbox{11em}{with~$m'=m[v/\eval(a)]$\\
-        \strut\quad and~$p'=\clear(p)$}
+      \<\ceu{\Attr{v}{a}\Or{p}},\alpha,m>
+      &\step{n}\<p',\alpha,m'>
+      &&\quad\parbox{10em}{with~$m'=m[v/\eval(a)]$\\
+        \strut\enspace and~$p'=\clear(p)$}
       \\[1\jot]
       %%
       \label{def:orig:inner:or-attr-right}
-      &\<\ceu{p\Or\Attr{v}{a}},\alpha,m>
-      \step{n}\<p',\alpha,m'>
-      &&\quad\parbox{11em}{if~$\blocked(p,\alpha,n)=1$,\\
-        \strut\quad with~$m'=m[v/\eval(a)]$\\
-        \strut\quad and~$p'=\clear(p)$}
+      \<\ceu{p\Or\Attr{v}{a}},\alpha,m>
+      &\step{n}\<p',\alpha,m'>
+      &&\quad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
+        \strut\enspace with~$m'=m[v/\eval(a)]$\\
+        \strut\enspace and~$p'=\clear(p)$}
       \\[1\jot]
       %%
       \label{def:orig:inner:or-break-left}
-      &\<\ceu{\Break\Or\;p},\alpha,m>
-      \step{n}\<\ceu{p';\Break},\alpha,m>
+      \<\ceu{\Break\Or\;p},\alpha,m>
+      &\step{n}\<\ceu{p';\Break},\alpha,m>
       &&\quad\text{with~$p'=\clear(p)$}
       \\[1\jot]
       %%
       \label{def:orig:inner:or-break-right}
-      &\<\ceu{p\Or\Break},\alpha,m>
-      \step{n}\<\ceu{p';\Break},\alpha,m>
+      \<\ceu{p\Or\Break},\alpha,m>
+      &\step{n}\<\ceu{p';\Break},\alpha,m>
       &&\quad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
-        \strut\quad with~$p'=\clear(p)$}
+        \strut\enspace with~$p'=\clear(p)$}
       \\[1\jot]
       %%
+      &\hskip-6.4em
       \label{def:orig:inner:or-left}
-      &\AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
+      \AXC{$\<p_1,\alpha,m>\step{n}\<p_1',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\Or{p_2}},\alpha,m>\step{n}
         \<\ceu{p_1'\Or{p_2}},\alpha',m'>$}
       \DP
-      &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=0$\\
-        \strut\quad and~\MARK{$p_1\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
-      \\[1\jot]
+      &&\quad\parbox{10em}{if~$\blocked(p_1,\alpha,n)=0$\\
+        \strut\enspace and~\MARK{$p_1\ne\ceu{\Skip}$,\\
+        \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}\\[1\jot]
       %%
+      &\hskip-6.4em
       \label{def:orig:inner:or-right}
-      &\AXC{$\<p_2,\alpha,m>\step{n}\<p_2',\alpha',m'>$}
+      \AXC{$\<p_2,\alpha,m>\step{n}\<p_2',\alpha',m'>$}
       \UIC{$\<\ceu{p_1\Or{p_2}},\alpha,m>\step{n}
         \<\ceu{p_1\Or{p_2'}},\alpha',m'>$}
       \DP
-      &&\quad\parbox{11em}{if~$\blocked(p_1,\alpha,n)=1$\\
-        \strut\quad and~\MARK{$p_2\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$}}
+      &&\quad\parbox{10em}{if~$\blocked(p_1,\alpha,n)=1$\\
+        \strut\enspace and~\MARK{$p_2\ne\ceu{\Skip}$,\\
+        \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 \end{definition}
 
@@ -631,8 +677,8 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
     \item$p'=\ceu{\Break}$.  Then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:seq-break}, and as such, $p_1=p_2=p'$,
       $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
-    \item$p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$ and~$d_2$ are
-      instances of rule~\eqref{def:orig:inner:seq}.  Thus there are
+    \item$p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$ and~$d_2$
+      are instances of rule~\eqref{def:orig:inner:seq}.  Thus there are
       derivations~$d_1'$ and~$d_2'$ such that
       \begin{align*}
         d_1'\Vdash\<p',\alpha,m>\step{n}\<p_1',\alpha_1,m_1>
@@ -654,11 +700,10 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
     %%
   \item$p=\ceu{p'\Atloop{p''}}$, for some~$p'$, $p''\in{P}$.
     \begin{case}
-    \item$p=\ceu{\Skip\Atloop{p'}}$, for some~$p'\in{P}$.  
-      Then~$d_1$ and~$d_2$ are instances
-      of axiom~\eqref{def:orig:inner:atloop-skip}, and as such,
-      $p_1=p_2=\ceu{\Loop{p'}}$, $\alpha_1=\alpha_2=\alpha$, and 
-      $m_1=m_2=m$.
+    \item$p=\ceu{\Skip\Atloop{p'}}$, for some~$p'\in{P}$.  Then~$d_1$
+      and~$d_2$ are instances of axiom~\eqref{def:orig:inner:atloop-skip},
+      and as such, $p_1=p_2=\ceu{\Loop{p'}}$, $\alpha_1=\alpha_2=\alpha$,
+      and~$m_1=m_2=m$.
     \item$p=\ceu{\Attr{v}{a}\Atloop{p'}}$, for some~$a\in{A}$, $v\in{V}$,
       and~$p'\in{P}$.  Then~$d_1$ and~$d_2$ are instances
       of axiom~\eqref{def:orig:inner:atloop-attr}, and as such,
@@ -669,9 +714,9 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
       and as such, $p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$,
       and~$m_1=m_2=m$.
     \item$p=\ceu{p'\Atloop{p''}}$, for some~$p'$, $p''\in{P}$ such
-      that~$p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$ and~$d_2$ 
-      are instances of rule~\eqref{def:orig:inner:atloop}.  Thus there are
-      derivations~$d_1'$ and~$d_2'$ such that
+      that~$p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$
+      and~$d_2$ are instances of rule~\eqref{def:orig:inner:atloop}.  Thus
+      there are derivations~$d_1'$ and~$d_2'$ such that
       \[
         d_1'\Vdash\<p',\alpha,m>\step{n}\<p_1',\alpha_1,m_1>
         \quad\text{and}\quad
@@ -689,27 +734,26 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
     $p''\in{P}$.
     \begin{case}
     \item\label{thm:orig:det-inner:and-skip-left}
-      $p=\ceu{\Skip\And{\;p'}}$, for some~$p'\in{P}$.  
+      $p=\ceu{\Skip\And{\;p'}}$, for some~$p'\in{P}$.
       Then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:and-skip-left}, and as such, $p_1=p_2=p'$,
       $\alpha_1=\alpha_2=\alpha$, and $m_1=m_2=m$.
-    \item$p=\ceu{p'\And\Skip}$, for some~~$p'\in{P}$.  
+    \item$p=\ceu{p'\And\Skip}$, for some~~$p'\in{P}$.
       Similar to \Cref{thm:orig:det-inner:and-skip-left}.
     \item\label{thm:orig:det-inner:and-attr-left}
       $p=\ceu{\Attr{v}{a}\And{p'}}$, for some~$v\in{V}$, $a\in{A}$
       and~$p'\in{P}$.  Then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:and-attr-left}, and as such, $p_1=p_2=p'$,
-      $\alpha_1=\alpha_2=\alpha$, and as such, as~$\eval$ is a total
-      function, $m_1=m_2=m[v/\eval(a)]$.
+      $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ is a total function,
+      $m_1=m_2=m[v/\eval(a)]$.
     \item$p=\ceu{p'\And\Attr{v}{a}}$, for some~$v\in{V}$, $a\in{A}$
-      and~$p'\in{P}$.  %Similar to \Cref{thm:orig:det-inner:and-attr-left}.
-      \MARK{\\
-      Then either~$\blocked(p')=0$ or~$\blocked(p')=1$.  If~$\blocked(p')=0$ 
-      then this case becomes \Cref{thm:orig:det-inner:and-left}.  Otherwise,
-      if~$\blocked(p')=1$, then~$d_1$ and~$d_2$ are instances of
+      and~$p'\in{P}$.  Then either~$\blocked(p')=0$ or~$\blocked(p')=1$.
+      If~$\blocked(p')=0$ then this case becomes
+      \Cref{thm:orig:det-inner:and-left}.  Otherwise, if~$\blocked(p')=1$,
+      then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:and-attr-right}, and as such,
-      $p_1=p_2=p'$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ is a total 
-      function, $m_1=m_2=m[v/\eval(a)]$.}
+      $p_1=p_2=p'$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ is a total
+      function, $m_1=m_2=m[v/\eval(a)]$.
     \item$p=\ceu{\Break\And{\;p'}}$, for some~$p'\in{P}$.  Then~$d_1$
       and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:and-break-left}, and as such,
@@ -723,8 +767,7 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
       $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
       function, $p_1=p_2=\ceu{\clear(p');\Break}$.
     \item\label{thm:orig:det-inner:and-left} $p=\ceu{p'\And{p''}}$, for
-      some~$p'$ and~$p''\in{P}$.  
-      Then there are two possibilities.
+      some~$p'$ and~$p''\in{P}$.  Then there are two possibilities.
       If~$\blocked(p')=0$ then~$d_1$ and~$d_2$ are instances
       of~\eqref{def:orig:inner:and-left}.  Thus there are derivations~$d_1'$
       and~$d_2'$ such that
@@ -740,9 +783,10 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
         p_1=(\ceu{p_1'\And{p''}})=(\ceu{p_2'\And{p''}})=p_2.
       \]
 
-      If, however, $\blocked(p')=1$ \MARK{and $p''\ne\ceu{\Skip,\Attr{v}{a},\Break}$,}
-      then~$d_1$ and~$d_2$ are instances of~~\eqref{def:orig:inner:and-right}. 
-      Thus there are derivations~$d_1''$ and~$d_2''$ such that
+      If, however, $\blocked(p')=1$ and
+      $p''\ne\ceu{\Skip,\Attr{v}{a},\Break}$, then~$d_1$ and~$d_2$ are
+      instances of~~\eqref{def:orig:inner:and-right}.  Thus there are
+      derivations~$d_1''$ and~$d_2''$ such that
       \[
         d_1''\Vdash\<p'',\alpha,m>\step{n}\<p_1'',\alpha_1,m_1>
         \quad\text{and}\quad
@@ -756,114 +800,74 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
       \]
     \end{case}
     %%
-  \item$p=\ceu{p'\Or{p''}}$, for some~$p'$, $p''\in{P}$.  
-    %\TODO{Similar to \Cref{thm:orig:det-inner:and} (we hope).}
+  \item$p=\ceu{p'\Or{p''}}$, for some~$p'$, $p''\in{P}$.
     \begin{case}
-    \item
-    \MARK{
-      $p=\ceu{\Skip\Or{\;p'}}$, for some~$p'\in{P}$.  
-      Then~$d_1$ and~$d_2$ are instances of
-      axiom~\eqref{def:orig:inner:or-skip-left}, and as such, 
-      $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total, 
-      $p_1=p_2=\ceu\clear(p')$. 
-    }
-    \item
-    \MARK{
-      $p=\ceu{p'\Or\Skip}$, for some~$p'\in{P}$.  
-      Then either~$\blocked(p')=0$ or~$\blocked(p')=1$.  If~$\blocked(p')=0$ 
-      then this case becomes \Cref{thm:orig:det-inner:or-left}.  Otherwise,
+    \item$p=\ceu{\Skip\Or{\;p'}}$, for some~$p'\in{P}$.  Then~$d_1$
+      and~$d_2$ are instances of axiom~\eqref{def:orig:inner:or-skip-left},
+      and as such, $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$
+      is a total, $p_1=p_2=\ceu\clear(p')$.
+    \item$p=\ceu{p'\Or\Skip}$, for some~$p'\in{P}$.  Then
+      either~$\blocked(p')=0$ or~$\blocked(p')=1$.  If~$\blocked(p')=0$ then
+      this case becomes \Cref{thm:orig:det-inner:or-left}.  Otherwise,
       if~$\blocked(p')=1$, then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:or-skip-right}, and as such,
       $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
       function, $p_1=p_2=\ceu\clear(p')$.
-    }
     \item\label{thm:orig:det-inner:or-attr-left}
-    \MARK{
       $p=\ceu{\Attr{v}{a}\Or{p'}}$, for some~$v\in{V}$, $a\in{A}$
       and~$p'\in{P}$.  Then~$d_1$ and~$d_2$ are instances of
-      axiom~\eqref{def:orig:inner:or-attr-left}, and as such, 
-      $\alpha_1=\alpha_2=\alpha$, as~$\eval$ is a total function, 
-      $m_1=m_2=m[v/\eval(a)]$, and as~$\clear$ is a total
-      function, $p_1=p_2=\ceu\clear(p')$.
-    }
-    \item
-    \MARK{
-      $p=\ceu{p'\Or\Attr{v}{a}}$, for some~$v\in{V}$, $a\in{A}$
-      and~$p'\in{P}$. 
-      Then either~$\blocked(p')=0$ or~$\blocked(p')=1$.  If~$\blocked(p')=0$ 
-      then this case becomes \Cref{thm:orig:det-inner:or-left}.  Otherwise,
-      if~$\blocked(p')=1$, then~$d_1$ and~$d_2$ are instances of
+      axiom~\eqref{def:orig:inner:or-attr-left}, and as such,
+      $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ and~$\clear$ are total
+      functions, $m_1=m_2=m[v/\eval(a)]$ and~$p_1=p_2=\ceu\clear(p')$.
+    \item$p=\ceu{p'\Or\Attr{v}{a}}$, for some~$v\in{V}$, $a\in{A}$
+      and~$p'\in{P}$.  Then either~$\blocked(p')=0$ or~$\blocked(p')=1$.
+      If~$\blocked(p')=0$ then this case becomes
+      \Cref{thm:orig:det-inner:or-left}.  Otherwise, if~$\blocked(p')=1$,
+      then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:or-attr-right}, and as such,
-      $\alpha_1=\alpha_2=\alpha$, as~$\eval$ is a total function, 
-      $m_1=m_2=m[v/\eval(a)]$, and as~$\clear$ is a total
-      function, $p_1=p_2=\ceu\clear(p')$.
-    }
-    \item
-    \MARK{
-      $p=\ceu{\Break\Or{\;p'}}$, for some~$p'\in{P}$.  Then~$d_1$
-      and~$d_2$ are instances of
-      axiom~\eqref{def:orig:inner:or-break-left}, and as such,
-      $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
-      function, $p_1=p_2=\ceu{\clear(p');\Break}$.
-    }
-    \item
-    \MARK{
-      $p=\ceu{{p'}\Or\Break}$, for some~$p'\in{P}$.  Then
+      $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ and~$\clear$ are total
+      functions, $m_1=m_2=m[v/\eval(a)]$ and~$p_1=p_2=\ceu\clear(p')$.
+    \item$p=\ceu{\Break\Or{\;p'}}$, for some~$p'\in{P}$.  Then~$d_1$
+      and~$d_2$ are instances of axiom~\eqref{def:orig:inner:or-break-left},
+      and as such, $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$
+      is a total function, $p_1=p_2=\ceu{\clear(p');\Break}$.
+    \item$p=\ceu{{p'}\Or\Break}$, for some~$p'\in{P}$.  Then
       either~$\blocked(p')=0$ or~$\blocked(p')=1$.  If~$\blocked(p')=0$ then
       this case becomes \Cref{thm:orig:det-inner:or-left}.  Otherwise,
       if~$\blocked(p')=1$, then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:or-break-right}, and as such,
       $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
       function, $p_1=p_2=\ceu{\clear(p');\Break}$.
-    }
-    \item\label{thm:orig:det-inner:or-left} 
-    \MARK{
-      $p=\ceu{p'\Or{p''}}$, for
-      some~$p'$ and~$p''\in{P}$.  
-      Then there are two possibilities.
+    \item\label{thm:orig:det-inner:or-left}$p=\ceu{p'\Or{p''}}$, for
+      some~$p'$ and~$p''\in{P}$.  Then there are two possibilities.
       If~$\blocked(p')=0$ then~$d_1$ and~$d_2$ are instances
       of~\eqref{def:orig:inner:or-left}.  Thus there are derivations~$d_1'$
       and~$d_2'$ such that
-    }
       \[
-    \MARK{
         d_1'\Vdash\<p',\alpha,m>\step{n}\<p_1',\alpha_1,m_1>
         \quad\text{and}\quad
         d_2'\Vdash\<p',\alpha,m>\step{n}\<p_2',\alpha_2,m_2>,
-      }
       \]
-    \MARK{
       for some~$p_1'$, $p_2'\in{P}$.  Since~$d_1'\prec{d_1}$
       and~$d_2'\prec{d_2}$, by induction hypothesis, $\alpha_1=\alpha_2$,
       $m_1=m_2$, and~$p_1'=p_2'$, which implies
-    }
       \[
-    \MARK{
         p_1=(\ceu{p_1'\Or{p''}})=(\ceu{p_2'\Or{p''}})=p_2.
-      }
       \]
-
-    \MARK{
-      If, however, $\blocked(p')=1$ and $p''\ne\ceu{\Skip,\Attr{v}{a},\Break}$,
-      then~$d_1$ and~$d_2$ are instances of~~\eqref{def:orig:inner:or-right}. 
-      Thus there are derivations~$d_1''$ and~$d_2''$ such that
-    }
+      If, however, $\blocked(p')=1$ and
+      $p''\ne\ceu{\Skip,\Attr{v}{a},\Break}$, then~$d_1$ and~$d_2$ are
+      instances of~~\eqref{def:orig:inner:or-right}.  Thus there are
+      derivations~$d_1''$ and~$d_2''$ such that
       \[
-    \MARK{
         d_1''\Vdash\<p'',\alpha,m>\step{n}\<p_1'',\alpha_1,m_1>
         \quad\text{and}\quad
         d_2''\Vdash\<p'',\alpha,m>\step{n}\<p_2'',\alpha_2,m_2>,
-      }
       \]
-    \MARK{
       for some~$p_1''$, $p_2''\in{P}$.  Since~$d_1''\prec{d_1}$
       and~$d_2''\prec{d_2}$, by induction hypothesis, $\alpha_1=\alpha_2$,
       $m_1=m_2$, and~$p_1''=p_2''$, which implies
-    }
       \[
-    \MARK{
-        p_1=(\ceu{p'\Or{p_1''}})=(\ceu{p'\Or{p_2''}})=p_2.
-      }
+        p_1=(\ceu{p'\Or{p_1''}})=(\ceu{p'\Or{p_2''}})=p_2.\qedhere
       \]
     \end{case}
   \end{case}
@@ -873,105 +877,132 @@ The next lemma establishes that given a program either it is possible to
 advance it by an inner-step or all its trails are blocked, but not both.
 
 \begin{lemma}[label={lem:orig:inner-step-or-blocked}]
-  For all~$p\in{P}$, $e,\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
+  For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
   if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then either
   \[
-    \exists{\delta\in\Delta}(\<p,e\alpha,m>\step{n}\delta)
-    \quad\text{or}\quad
-    \blocked(p,e\alpha,n)=1,
+    \exists{\delta\in\Delta}(\<p,\alpha,m>\step{n}\delta)
+    \quad\text{or}\quad \blocked(p,\alpha,n)=1,
   \]
   but not both.
 \end{lemma}
 \begin{proof}
-  \MARK{By induction on the structure of programs.
-    There are ten possibilities depending on the structure of~$p$.  
-  }
+  By induction on the structure of programs.
   \begin{case}
-  \item
-  \MARK{ 
-    $p=\ceu{\Await(e)}$, for some~$e\in{E}$.  
-    Then we can derive~$\delta$ using the axiom~\eqref{def:orig:inner:await}, 
-    and as such, $\delta=\<\ceu{\Awaiting(e,n')},ea,m>$, with $n'=n+1$, 
-    and according to 
-    definition~\ref{def:orig:blocked}, $\blocked(await(e'),e\alpha,n) = 0$.
-  }
+  \item $p=\ceu{\Await(e)}$, for some~$e\in{E}$.  Then by
+    axiom~\eqref{def:orig:inner:await},
+    \[
+      \<\ceu{\Await(e)},\alpha,m>
+        \step{n}\<\ceu{\Awaiting(e,n')},\alpha,m>=\delta,
+    \]
+    where $n'=n+1$.  And by \Cref{def:orig:blocked},
+    $\blocked(\ceu{\Await(e)},\alpha,n)=0$.
     %%
   \item $p=\ceu{\Awaiting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
+    \begin{case}
+    \item$n'<n$.  If~$e$ is the top-of-stack event in~$\alpha$, in
+      symbols~$e=\alpha_{[1]}$, then by
+      axiom~\eqref{def:orig:inner:awaiting},
+      \[
+        \<\ceu{\Awaiting(e,n')},\alpha,m>
+        \step{n}\<\ceu{\Skip},\alpha,m>=\delta.
+      \]
+      And by \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=0$.
 
-  \MARK{ 
-    Aqui tive um problema: $\blocked(\ceu{\Awaiting(e',n')},e\alpha,n)=1$ se
-    $n=n'$. Porém, o axioma~\eqref{def:orig:inner:awaiting} define uma regra 
-    para a configuração $\<\ceu{\Awaiting(e,n')},e\alpha,m>$ se $n'\leq n$.
-  }
+      \par If, however, $e\ne\alpha_{[1]}$, then there is no such~$\delta$,
+      as no rule is applicable.  And by \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1.$
+    \item$n'=n$.
+      \FIXME{
+        Pelo axioma~\eqref{def:orig:inner:awaiting},
+        \[
+          \<\ceu{\Awaiting(e,n')},\alpha,m>
+          \step{n}\<\ceu{\Skip},\alpha,m>.
+        \]
+        E~$\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
+        Ou seja, ambos os lados do ``ou'' deram verdadeiro, o que invalida o
+        lema.
+      }
+    \item$n'>n$.  If~$e=\alpha_{[1]}$ then
+      \FIXME{
+        Não existe tal~$\delta$ e
+        \[
+          \blocked(\ceu{\Awaiting(e,n')},\alpha,n)=0.
+        \]
+        O que, novamente, invalida o lema.
+      }
+      \par If, however, $e\ne\alpha_{[1]}$, then there is no such~$\delta$
+      (no rule is applicable) and, by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
+    \end{case}
     %%
-  \item
-  \MARK{
-    $p=\ceu{\Emit(e)}$, for some~$e\in{E}$.  
-    Then we can derive~$\delta$ using the axiom~\eqref{def:orig:inner:emit}, 
-    and as such, $\delta=\<\ceu{\Emitting(n')},e\alpha,m>$ with~$n'=\|\alpha|$,
-    and according to 
-    definition~\ref{def:orig:blocked}, $\blocked(\ceu{\Emit(e')},e\alpha,n)=0$.
-  }
+  \item$p=\ceu{\Emit(e)}$, for some~$e\in{E}$.  Then by
+    axiom~\eqref{def:orig:inner:emit},
+    \[
+      \<\ceu{\Emit(e)},\alpha,m>
+      \step{n}\<\ceu{\Emitting(n')},e\alpha,m>=\delta,
+    \]
+    where~$n'=\|\alpha|$.  And by~\Cref{def:orig:blocked},
+    $\blocked(\ceu{\Emit(e')},e\alpha,n)=0$.
     %%
-  \item
-  \MARK{ 
-    $p=\ceu{\Emitting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
-  \begin{case}
-    \item 
-      For $n'=\|e\alpha|$. Then we can derive~$\delta$ using the 
-      axiom~\eqref{def:orig:inner:emitting}, and as such, 
-      $\delta=\<\ceu\Skip,e\alpha,m>$, and according to 
-      definition~\ref{def:orig:blocked}, 
-      $\blocked(\ceu{\Emitting(e,n')},e\alpha,n)=0$.
-    \item 
-      For $n'\ne \|e\alpha|$. Then there is no rule we can use to 
-      derive~$\delta$ and according to 
-      definition~\ref{def:orig:blocked}, 
-      $\blocked(\ceu{\Emitting(e,n')},e\alpha,n)=1$.
-  \end{case}
-  }
+  \item $p=\ceu{\Emitting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
+    \begin{case}
+    \item~$n'=\|\alpha|$.  By axiom~\eqref{def:orig:inner:emitting},
+      \[
+        \<\ceu{\Emitting(e,n')},\alpha,m>
+        \step{n}\<\ceu{\Skip},\alpha,m>=\delta.
+      \]
+      And by \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Emitting(e,n')},\alpha,n)=0$.
+    \item~$n'\ne\|\alpha|$.  Then there is no such~$\delta$ (no rule is
+      applicable) and, by \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Emitting(e,n')},\alpha,n)=1$.
+    \end{case}
     %%
-  \item
-  \MARK{
-    $p=\ceu{\Ifelse{b}{p'}{p''}}$, for some~$b\in{B}$ and~$p'$,
-    $p''\in{P}$.
-    According to definition~\ref{def:orig:blocked},
+  \item $p=\ceu{\Ifelse{b}{p'}{p''}}$, for some~$b\in{B}$ and~$p'$,
+    $p''\in{P}$.  By axioms~\eqref{def:orig:inner:if-true}
+    and~\eqref{def:orig:inner:if-false}, if~$\eval(b,m)=1$,
+    $\delta=\<p',\alpha,m>$, otherwise~$\delta=\<p'',\alpha,m>$.  And
+    by~\Cref{def:orig:blocked},
     $\blocked(\ceu{\Ifelse{b}{p'}{p''}},e\alpha,n)=0$
+  \item$p=\ceu{p';p''}$, for some~$p'$, $p''\in{P}$.
     \begin{case}
-    \item$\eval(b,m)=1$.  Then we can derive~$\delta$ using the
-      axiom~\eqref{def:orig:inner:if-true}, and as such, 
-      $\delta=\<p',e\alpha,m>$.
-    \item$\eval(b,m)=0$.  Then we can derive~$\delta$ using the
-      axiom~\eqref{def:orig:inner:if-false}, and as such, 
-      $\delta=\<p'',e\alpha,m>$.
-    \end{case}
-  }
-  \item
-  \MARK{ 
-    $p=\ceu{p';p''}$, for some~$p'$, $p''\in{P}$.
-    According to definition~\ref{def:orig:blocked},
-    $\blocked(\ceu{p';p''},e\alpha,n)=\blocked(\ceu{p'},e\alpha,n)$.
-    \begin{case}
-    \item$p'=\ceu\Skip$.  Then we can derive~$\delta$ using the
-      axiom~\eqref{def:orig:inner:seq-skip}, and as such, 
-      $\delta=\<p'',e\alpha,m>$ and according to
-      definition~\ref{def:orig:blocked},
-      $\blocked(\ceu\Skip,e\alpha,n)=0$.
-    \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.
-      Then we can derive~$\delta$ using the
-      axiom~\eqref{def:orig:inner:seq-attr}, and as such,
-      $\delta=\<\ceu{p''},e\alpha,m'>$, with $m'=m[v/\eval(a)]$, and 
-      according to definition~\ref{def:orig:blocked},
-      $\blocked(\ceu{\Attr{v}{a}},e\alpha,n)=0$.
-    \item$p'=\ceu{\Break}$. Then we can derive~$\delta$ using the
-      axiom~\eqref{def:orig:inner:seq-break}, and as such,
-      $\delta=\<\ceu\Break,e\alpha,m>$, and 
-      according to definition~\ref{def:orig:blocked},
-      $\blocked(\ceu\Break,e\alpha,n)=0$.
-    \item$p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  
-      \TODO{induction hypothesis}
-    \end{case}
-  }
+    \item$p'=\ceu{\Skip}$.  By axiom~\eqref{def:orig:inner:seq-skip},
+      $\delta=\<p'',\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Skip},\alpha,n)=0$.
+    \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.  By
+      axiom~\eqref{def:orig:inner:seq-attr},
+      $\delta=\<p'',\alpha,m[v/\eval(a)]>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
+    \item$p'=\ceu{\Break}$.  By axiom~\eqref{def:orig:inner:seq-break},
+      $\delta=\<\ceu{Break},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Break},\alpha,n)=0$.
+
+      \item$p'\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$.  By induction
+        hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        Suppose~$\<p',\alpha,m>\step{n}\<p_1',\alpha',m'>$, for
+        some~$p_1'\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
+        by rule~\eqref{def:orig:inner:seq},
+        \[
+          \<p';p'',\alpha,m>\step{n}\<p'_1;p'',\alpha',m'>.
+        \]
+        And by \Cref{def:orig:blocked},
+        \[
+          \blocked(p';p'',\alpha,n)=\blocked(p',\alpha,n)=0.
+        \]
+
+        If, however,~$\blocked(p',\alpha,n)=1$, then there is no such~$d$
+        (no rule is applicable) and by \Cref{def:orig:blocked},
+        \[
+          \blocked(p';p'',\alpha,n)=\blocked(p',\alpha,n)=1.
+        \]
+      \end{case}
     %%
   \item
   \MARK{ 
