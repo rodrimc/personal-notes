@@ -331,11 +331,11 @@ program.
     \clear(\ceu{\Break})
     &=\ceu{\Skip}\\
     %%
-    \clear(\ceu{\Ifelse{v}{p_1}{p_2}})
+    \clear(\ceu{\Ifelse{b}{p_1}{p_2}})
     &=\ceu{\Skip}\\
     %%
     \clear(\ceu{p_1;p_2})
-    &=\clear(p_1);\MARK{\clear(p_2)}\\
+    &=\clear(p_1)\\
     %%
     \clear(\ceu{\Loop p})
     &=\clear(p)\\
