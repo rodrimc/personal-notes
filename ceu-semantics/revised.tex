@@ -418,7 +418,8 @@ advances blocked programs.  \TODO{Improve this description.}
 \begin{theorem}[label={thm:orig:det-outer},
   name={Determinism of the outer-step relation}]
   For all~$p$, $p_1$, $p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$,
-  $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
+  $\alpha=\alpha_{[1]}...\alpha_{[n]}$ ($\alpha_{[1]}$ is in the 
+  top of stack $\alpha$), $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
   \begin{gather*}
     \text{if}\quad\<p,\alpha,m>\ostep{n}\<p_1,\alpha_1,m_1>
     \quad\text{and}\quad
@@ -426,15 +427,12 @@ advances blocked programs.  \TODO{Improve this description.}
     \text{then}\quad\<p_1,\alpha_1,m_1>=\<p_2,\alpha_2,m_2>.
   \end{gather*}
 \end{theorem}
-\begin{proof}
-  \TODO{By induction on the structure of derivations.}
-\end{proof}
 
 \input{revised-outer-det-proof}
 
 \begin{theorem}[label={thm:orig:term-outer},
   name={Termination of the outer-step relation}]
-  For all~$p\in{P}$, $\alpha\in{E}$, and~$m\in\mathcal{M}$,
+  For all~$p\in{P}$, $\alpha\in{E}$ and~$m\in\mathcal{M}$,
   if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then
   \[
     \exists{\delta\in\Delta}(\<p,\alpha,m>\ostep{n}\delta).
@@ -469,8 +467,7 @@ programs~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$).
 
 \begin{theorem}[label={thm:orig:det-react},
   name={Determinism of the reaction relation}]
-  For all~$p$, $p_1$, $p_2\in{P}$, $\alpha\in{E^*}$, $m$, $m_1$,
-  $m_2\in\mathcal{M}$, and~$n\in{N}$,
+  For all~$p$, $p_1$, $p_2\in{P}$, $\alpha\in{E^*}$, $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
   \begin{gather*}
     \text{if}\quad\<p,\alpha,m>\react{n}\<p_1,m_1>
     \quad\text{and}\quad
