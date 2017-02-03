@@ -483,20 +483,23 @@ program.
 
     \noindent\emph{Par/and}
     %%
-    \todo{Adicionamos a condição de o lado esquerdo estar bloqueado na
-      regra~\ref{def:orig:inner:and-attr-right}.}
+    \todo{
+      (1)Adicionamos a condição de o lado esquerdo estar bloqueado nas
+      regras~\ref{def:orig:inner:and-attr-right}
+      e~\ref{def:orig:inner:and-skip-right}.
+    }
     %%
     \begin{alignat}{2}
       \label{def:orig:inner:and-skip-left}
       \<\ceu{\Skip\And{\;p}},\alpha,m>
       &\step{n}\<p,\alpha,m>
-      &&\quad\parbox{10em}{\MARK{if~$p\ne \ceu\Break$}}
+      &&
       \\[1\jot]
       %%
       \label{def:orig:inner:and-skip-right}
       \<\ceu{p\And\Skip},\alpha,m>
       &\step{n}\<p,\alpha,m>
-      &&\quad\parbox{10em}{\MARK{if~$p\ne \ceu\Break$}}
+      &&\quad\parbox{10em}{\MARK{if~$\blocked(p,\alpha,n)=1$}}
       \\[1\jot]
       %%
       \label{def:orig:inner:and-attr-left}
