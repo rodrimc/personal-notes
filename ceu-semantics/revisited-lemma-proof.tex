@@ -1,0 +1,354 @@
+\begin{proof}
+  By induction on the structure of programs.
+  \begin{case}
+  \item $p=\ceu{\Await(e)}$, for some~$e\in{E}$.  Then by
+    axiom~\eqref{def:orig:inner:await},
+    \[
+      \<\ceu{\Await(e)},\alpha,m>
+        \step{n}\<\ceu{\Awaiting(e,n')},\alpha,m>=\delta,
+    \]
+    where $n'=n+1$.  And by \Cref{def:orig:blocked},
+    $\blocked(\ceu{\Await(e)},\alpha,n)=0$.
+    %%
+  \item $p=\ceu{\Awaiting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
+    \begin{case}
+    \item$n'<n$.  If~$e$ is the top-of-stack event in~$\alpha$, in
+      symbols~$e=\alpha_{[1]}$, then by
+      axiom~\eqref{def:orig:inner:awaiting},
+      \[
+        \<\ceu{\Awaiting(e,n')},\alpha,m>
+        \step{n}\<\ceu{\Skip},\alpha,m>=\delta.
+      \]
+      And by \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=0$.
+
+      \par If, however, $e\ne\alpha_{[1]}$, then there is no such~$\delta$,
+      as no rule is applicable.  And by \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1.$
+    \item$n'=n$.
+      \FIXME{
+        Pelo axioma~\eqref{def:orig:inner:awaiting},
+        \[
+          \<\ceu{\Awaiting(e,n')},\alpha,m>
+          \step{n}\<\ceu{\Skip},\alpha,m>.
+        \]
+        E~$\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
+        Ou seja, ambos os lados do ``ou'' deram verdadeiro, o que invalida o
+        lema.
+      }
+    \item$n'>n$.  If~$e=\alpha_{[1]}$ then
+      \FIXME{
+        Não existe tal~$\delta$ e
+        \[
+          \blocked(\ceu{\Awaiting(e,n')},\alpha,n)=0.
+        \]
+        O que, novamente, invalida o lema.
+      }
+      \par If, however, $e\ne\alpha_{[1]}$, then there is no such~$\delta$
+      (no rule is applicable) and, by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
+    \end{case}
+    %%
+  \item$p=\ceu{\Emit(e)}$, for some~$e\in{E}$.  Then by
+    axiom~\eqref{def:orig:inner:emit},
+    \[
+      \<\ceu{\Emit(e)},\alpha,m>
+      \step{n}\<\ceu{\Emitting(n')},e\alpha,m>=\delta,
+    \]
+    where~$n'=\|\alpha|$.  And by~\Cref{def:orig:blocked},
+    $\blocked(\ceu{\Emit(e')},e\alpha,n)=0$.
+    %%
+  \item $p=\ceu{\Emitting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
+    \begin{case}
+    \item~$n'=\|\alpha|$.  By axiom~\eqref{def:orig:inner:emitting},
+      \[
+        \<\ceu{\Emitting(e,n')},\alpha,m>
+        \step{n}\<\ceu{\Skip},\alpha,m>=\delta.
+      \]
+      And by \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Emitting(e,n')},\alpha,n)=0$.
+    \item~$n'\ne\|\alpha|$.  Then there is no such~$\delta$ (no rule is
+      applicable) and, by \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Emitting(e,n')},\alpha,n)=1$.
+    \end{case}
+    %%
+  \item $p=\ceu{\Ifelse{b}{p'}{p''}}$, for some~$b\in{B}$ and~$p'$,
+    $p''\in{P}$.  By axioms~\eqref{def:orig:inner:if-true}
+    and~\eqref{def:orig:inner:if-false}, if~$\eval(b,m)=1$,
+    $\delta=\<p',\alpha,m>$, otherwise~$\delta=\<p'',\alpha,m>$.  And
+    by~\Cref{def:orig:blocked},
+    $\blocked(\ceu{\Ifelse{b}{p'}{p''}},e\alpha,n)=0$
+  \item$p=\ceu{p';p''}$, for some~$p'$, $p''\in{P}$. 
+    By \Cref{def:orig:blocked} $\blocked(p';p'', \alpha,n)=\blocked(p',\alpha,n)$
+    \begin{case}
+    \item$p'=\ceu{\Skip}$.  By axiom~\eqref{def:orig:inner:seq-skip},
+      $\delta=\<p'',\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Skip},\alpha,n)=0$.
+    \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.  By
+      axiom~\eqref{def:orig:inner:seq-attr},
+      $\delta=\<p'',\alpha,m[v/\eval(a)]>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
+    \item$p'=\ceu{\Break}$.  By axiom~\eqref{def:orig:inner:seq-break},
+      $\delta=\<\ceu{Break},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Break},\alpha,n)=0$.
+
+      \item$p'\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$.  By induction
+        hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        Suppose~$\<p',\alpha,m>\step{n}\<p_1',\alpha',m'>$, for
+        some~$p_1'\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
+        by rule~\eqref{def:orig:inner:seq},
+        \[
+          \<p';p'',\alpha,m>\step{n}\<p'_1;p'',\alpha',m'>.
+        \]
+        And by \Cref{def:orig:blocked},
+        \[
+          \blocked(p';p'',\alpha,n)=\blocked(p',\alpha,n)=0.
+        \]
+
+        If, however,~$\blocked(p',\alpha,n)=1$, then there is no such~$d$
+        (no rule is applicable) and by \Cref{def:orig:blocked},
+        \[
+          \blocked(p';p'',\alpha,n)=\blocked(p',\alpha,n)=1.
+        \]
+      \end{case}
+    %%
+  \item$p=\ceu{\Loop{p'}}$, for some~$p'\in{P}$.  
+    By axiom~\eqref{def:orig:inner:loop}, $\delta=\<\ceu{p'\Atloop{p'}},\alpha,m>$.
+    And by~\Cref{def:orig:blocked}, $\blocked(\ceu{\Loop{p'}},\alpha,m)=0$.
+    %%
+  \item$p=\ceu{p'\Atloop{p''}}$, for some~$p'$, $p''\in{P}$.
+    By \Cref{def:orig:blocked}~$\blocked(\ceu{p'\Atloop{p''}},\alpha,n)=\blocked(p',\alpha,n)$
+    \begin{case}
+    \item$p'=\ceu{\Skip}$.  By axiom~\eqref{def:orig:inner:atloop-skip},
+      $\delta=\<\ceu{\Loop{p''}},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Skip},\alpha,n)=0$.
+    \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.  By
+      axiom~\eqref{def:orig:inner:atloop-attr},
+      $\delta=\<\ceu{\Loop{p''}},\alpha,m[v/\eval(a)]>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
+    \item$p'=\ceu{\Break}$.  By axiom~\eqref{def:orig:inner:atloop-break},
+      $\delta=\<\ceu{\Skip},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Break},\alpha,n)=0$.
+
+      \item$p'\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$.  By induction
+        hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        Suppose~$\<p',\alpha,m>\step{n}\<p_1',\alpha',m'>$, for
+        some~$p_1'\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
+        by rule~\eqref{def:orig:inner:atloop},
+        \[
+          \<\ceu{p'\Atloop{p''}},\alpha,m>\step{n}\<\ceu{p'_1\Atloop{p''}},\alpha',m'>.
+        \]
+        And by \Cref{def:orig:blocked},
+        \[
+          \blocked(\ceu{p'\Atloop{p''}},\alpha,n)=\blocked(p',\alpha,n)=0.
+        \]
+
+        If, however,~$\blocked(p',\alpha,n)=1$, then there is no such~$d$
+        (no rule is applicable) and by \Cref{def:orig:blocked},
+        \[
+          \blocked(\ceu{p'\Atloop{p''}},\alpha,n)=\blocked(p',\alpha,n)=1.
+        \]
+      \end{case}
+    %%
+  \item$p=\ceu{p'\And{p''}}$, for some~$p'\in{P}$,
+    By \Cref{def:orig:blocked}
+     \[
+       \blocked(\ceu{p'\And{p''}},\alpha,n)=
+       \blocked(p',\alpha,n)\cdot\blocked(p'',\alpha,n)
+     \]
+    \begin{case}
+    \item$p'=\ceu{\Skip}$ and $p''\ne \ceu\Break$.  
+      By axiom~\eqref{def:orig:inner:and-skip-left},
+      $\delta=\<\ceu{p''},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Skip},\alpha,n)=0$.
+    \item$p''=\ceu{\Skip}$ and $p'\ne \ceu\Break$.  
+      By axiom~\eqref{def:orig:inner:and-skip-right},
+      $\delta=\<\ceu{p'},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Skip},\alpha,n)=0$.
+    \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.  By
+      axiom~\eqref{def:orig:inner:and-attr-left},
+      $\delta=\<\ceu{p''},\alpha,m[v/\eval(a)]>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
+    \item$p''=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.
+      By induction hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        If~$\blocked(p',\alpha,m)=0$, then the derivation of $\delta$ is
+        similar to ~\Cref{thm:orig:lemma:and}.
+
+        If, however,~$\blocked(p',\alpha,n)=1$, then by
+        axiom~\eqref{def:orig:inner:and-attr-right},
+        $\delta=\<\ceu{p'},\alpha,m[v/\eval(a)]>$.
+
+        Either way, $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
+    \item$p'=\ceu{\Break}$.  By axiom~\eqref{def:orig:inner:and-break-left},
+      $\delta=\<\ceu{\clear(p'')},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Break},\alpha,n)=0$.
+    \item$p''=\ceu\Break$.
+      By induction hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        If~$\blocked(p',\alpha,n)=0$, then the derivation of $\delta$ is
+        similar to ~\Cref{thm:orig:lemma:and}.
+
+        If, however,~$\blocked(p',\alpha,n)=1$, then by
+        axiom~\eqref{def:orig:inner:and-break-right},
+        $\delta=\<\clear(p'),\alpha,m>$.
+
+        Either way, $\blocked(\ceu\Break,\alpha,n)=0$.
+
+      \item\label{thm:orig:lemma:and}
+        $p'\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$.  By induction
+        hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        Suppose~$\<p',\alpha,m>\step{n}\<p_1',\alpha',m'>$, for
+        some~$p_1'\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
+        by rule~\eqref{def:orig:inner:and-left},
+        \[
+          \<\ceu{p'\And{p''}},\alpha,m>\step{n}\<\ceu{p'_1\And{p''}},\alpha',m'>.
+        \]
+        And by \Cref{def:orig:blocked},
+        \[
+          \blocked(\ceu{p'\And{p''}},\alpha,n)=\blocked(p',\alpha,n)=0.
+        \]
+
+        Now suppose~$\<p'',\alpha,m>\step{n}\<p_1'',\alpha',m'>$, for
+        some~$p_1''\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
+        by rule~\eqref{def:orig:inner:and-right},
+        \[
+          \<\ceu{p'\And{p''}},\alpha,m>\step{n}\<\ceu{p'\And{p_1''}},\alpha',m'>.
+        \]
+        And by \Cref{def:orig:blocked},
+        \[
+          \blocked(\ceu{p'\And{p''}},\alpha,n)=\blocked(p',\alpha,n)=0.
+        \]
+    \end{case}
+  \item$p=\ceu{p'\Or{p''}}$, for some~$p'\in{P}$,
+    By \Cref{def:orig:blocked}
+     \[
+       \blocked(\ceu{p'\Or{p''}},\alpha,n)=
+       \blocked(p',\alpha,n)\cdot\blocked(p'',\alpha,n)
+     \]
+    \begin{case}
+    \item$p'=\ceu{\Skip}$.  
+      By axiom~\eqref{def:orig:inner:or-skip-left},
+      $\delta=\<\ceu{\clear(p'')},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Skip},\alpha,n)=0$.
+      %%
+    \item$p''=\ceu{\Skip}$.  
+      By induction hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        If~$\blocked(p',\alpha,m)=0$, then the derivation of $\delta$ is
+        similar to ~\Cref{thm:orig:lemma:or}.
+
+        If, however,~$\blocked(p',\alpha,n)=1$, then by
+        axiom~\eqref{def:orig:inner:or-skip-right},
+        $\delta=\<\ceu{\clear(p')},\alpha,m>$.
+
+        Either way, $\blocked(\ceu\Skip,\alpha,n)=0$.
+      %%
+    \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.  By
+      axiom~\eqref{def:orig:inner:or-attr-left},
+      $\delta=\<\ceu{\clear(p'')},\alpha,m[v/\eval(a)]>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
+      %%
+    \item$p''=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.
+      By induction hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        If~$\blocked(p',\alpha,m)=0$, then the derivation of $\delta$ is
+        similar to ~\Cref{thm:orig:lemma:or}.
+
+        If, however,~$\blocked(p',\alpha,n)=1$, then by
+        axiom~\eqref{def:orig:inner:or-attr-right},
+        $\delta=\<\ceu{\clear(p')},\alpha,m[v/\eval(a)]>$.
+
+        Either way, $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
+    \item$p'=\ceu{\Break}$.  By axiom~\eqref{def:orig:inner:or-break-left},
+      $\delta=\<\ceu{\clear(p'')},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\blocked(\ceu{\Break},\alpha,n)=0$.
+    \item$p''=\ceu\Break$.
+      By induction hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        If~$\blocked(p',\alpha,n)=0$, then the derivation of $\delta$ is
+        similar to ~\Cref{thm:orig:lemma:or}.
+
+        If, however,~$\blocked(p',\alpha,n)=1$, then by
+        axiom~\eqref{def:orig:inner:or-break-right},
+        $\delta=\<\clear(p'),\alpha,m>$.
+
+        Either way, $\blocked(\ceu\Break,\alpha,n)=0$.
+
+      \item\label{thm:orig:lemma:or}
+        $p'\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$.  By induction
+        hypothesis, exactly one of the following hold:
+        \[
+          \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
+          \quad\text{or}\quad
+          \blocked(p',\alpha,n)=1.
+        \]
+
+        Suppose~$\<p',\alpha,m>\step{n}\<p_1',\alpha',m'>$, for
+        some~$p_1'\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
+        by rule~\eqref{def:orig:inner:or-left},
+        \[
+          \<\ceu{p'\Or{p''}},\alpha,m>\step{n}\<\ceu{p'_1\Or{p''}},\alpha',m'>.
+        \]
+        And by \Cref{def:orig:blocked},
+        \[
+          \blocked(\ceu{p'\Or{p''}},\alpha,n)=\blocked(p',\alpha,n)=0.
+        \]
+
+        Now suppose~$\<p'',\alpha,m>\step{n}\<p_1'',\alpha',m'>$, for
+        some~$p_1''\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
+        by rule~\eqref{def:orig:inner:or-right},
+        \[
+          \<\ceu{p'\Or{p''}},\alpha,m>\step{n}\<\ceu{p'\And{p_1''}},\alpha',m'>.
+        \]
+        And by \Cref{def:orig:blocked},
+        \[
+          \blocked(\ceu{p'\Or{p''}},\alpha,n)=\blocked(p',\alpha,n)=0.
+        \]
+    \end{case}
+  \end{case}
+\end{proof}
+
