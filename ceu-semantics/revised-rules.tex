@@ -12,7 +12,8 @@
     (3)~Adicionamos condições que garantem que a cada passo apenas uma regra
     é aplicável---não há escolha.  Outra forma menos verbosa de fazer isso é
     dizer que elas devem ser avaliadas na ordem em que foram declaradas.
-    Nesse caso, a primeira que for satisfeita deve ser aplicada.}
+    Nesse caso, a primeira que for satisfeita deve ser aplicada.  (Não
+    fizemos isso para deixar explícitas as condições de cada regra.)}
 
   \noindent\emph{Await and emit}
     \begin{alignat}{2}
@@ -57,8 +58,8 @@
     \noindent\emph{Sequences}
     \begin{alignat}{2}
       \label{def:orig:inner:seq-skip}
-      \MARK{\<\ceu\Skip;p,\alpha,m>}
-      &\MARK{\step{n}\<p,\alpha,m>}
+      \<\ceu\Skip;p,\alpha,m>
+      &\step{n}\<p,\alpha,m>
       &&
       \\[1\jot]
       %%
@@ -92,8 +93,8 @@
       \\[1\jot]
       %%
       \label{def:orig:inner:atloop-skip}
-      \MARK{\<\ceu{\Skip\Atloop{p}},\alpha,m>}
-      &\MARK{\step{n}\<\ceu{\Loop{p}},\alpha,m>}
+      \<\ceu{\Skip\Atloop{p}},\alpha,m>
+      &\step{n}\<\ceu{\Loop{p}},\alpha,m>
       &&
       \\[1\jot]
       %%
@@ -250,4 +251,3 @@
         \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}
     \end{alignat}
 \end{definition}
-

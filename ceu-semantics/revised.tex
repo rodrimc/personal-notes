@@ -247,9 +247,16 @@ program.
 \begin{definition}[label={def:orig:blocked}]
   Function~$\blocked\colon{P\times{E^*}\times{N}}\to\{0,1\}$ is defined
   inductively as follows.
+  %%
+  \todo{Intuitivamente, um programa~$p$ está bloqueado se toda trilha de~$p$
+    está~(i) aguardando ($\ceu{\protect\Awaiting}$) algum evento que não
+    está no topo da pilha ou que foi emitido na reação atual, ou~(ii) acabou
+    de emitir um evento ($\ceu{\protect\Emitting}$) e esse evento ainda não
+    foi consumido (i.e., está na pilha).  É isso?}
+  %%
   \begin{align*}
-    \MARK{\blocked(\ceu{\Skip},e\alpha,n)}
-    &\MARK{=0}\\
+    \blocked(\ceu{\Skip},e\alpha,n)
+    &=0\\
     %%
     \blocked(\ceu{\Attr{v}{a}},e\alpha,n)
     &=0\\
@@ -301,26 +308,26 @@ program.
 \end{definition}
 
 \begin{definition}[label={def:orig:clear}]
-  Function $\clear\colon{P}\to{P'}$, \MARK{where
-    $P'=\{\ceu{\Attr{v}{a}}\}$}, is defined inductively as follows.
+  Function $\clear\colon{P}\to{P'}$ is defined inductively as follows.
   %%
-  \todo{(1)~Além de atribuições~$P'$ não deveria conter instruções
-    if-else?.\newline
+  \todo{Intuitivamente, dado um programa~$p$, a função~$\clear$ concatena em
+    sequência o corpo das \emph{primeiras} ocorrências
+    de~$\ceu{\protect\Fin}$ em cada trilha de~$p$, e retorna a sequência
+    resultante.  A sintaxe do corpo de instruções~$\ceu{\protect\Fin}$ está
+    restrita à programas no conjunto restrito~$P'$, i.e., que não contenham
+    instruções~$\ceu{\protect\Await}$, $\ceu{\protect\Awaiting}$,
+    $\ceu{\protect\Emit}$, $\ceu{\protect\Emitting}$, $\ceu{\protect\And}$,
+    $\ceu{\protect\Or}$ e~$\ceu{\protect\Fin}$.  É isso?
     %%
-    (2)~No artigo original, $\clear(p_1;p_2)$ retorna
-    apenas~$\clear(p_1)$.  Achamos que isso está errado, já que apenas o
-    primeiro~$\ceu{\protect\Fin}$ seria considerado.  (Confirmar com o
-    Chicão).\newline
-    %%
-    (3)~Adicionei $\clear(skip)$.
-    }
+    Se sim, por que a chamada recursiva para~\emph{loops} mas não
+    para~\emph{if-else}?}
   %%
 \begin{align*}
-    \MARK{\clear(\ceu\Skip)}
-    &=\MARK{\ceu\Skip}\\
+    \clear(\ceu\Skip)
+    &=\ceu\Skip\\
     %%
     \clear(\ceu{\Attr{v}{a}})
-    &=\ceu{\MARK{\Attr{v}{a}}}\\
+    &=\ceu{\Skip}\\
     %%
     \clear(\ceu{\Await(e')})
     &=\ceu{\Skip}\\
@@ -360,6 +367,22 @@ program.
   \end{align*}
 \end{definition}
 
+\todo[inline]{Ainda na definição da~$\clear$, será que não é preciso chamar
+  a função recursivamente também para a segunda metade da sequência?  Do
+  jeito que está
+  \[
+    \clear(\ceu{(\protect\Attr{v}{a};\protect\Fin{p})
+      \protect\And\protect\Skip})
+    =\ceu{\protect\Skip;\protect\Skip}.
+  \]
+  Não deveria ser
+  \[
+    \clear(\ceu{(\protect\Attr{v}{a};\protect\Fin{p})
+      \protect\And\protect\Skip})
+    =\ceu{p;\protect\Skip}?
+  \]
+}
+
 \input{revised-rules}
 
 The next theorem establishes that the reaction inner-step relation is
@@ -378,8 +401,9 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
 \end{theorem}
 \input{revised-inner-det-proof}
 
-The next lemma establishes that given a program either it is possible to
-advance it by an inner-step or all its trails are blocked, but not both.
+The next lemma establishes that given a nontrivial program~$p$ either it is
+possible to advance~$p$ by an inner-step or all its trails are blocked, but
+not both.
 
 \begin{lemma}[label={lem:orig:inner-step-or-blocked}]
   For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
