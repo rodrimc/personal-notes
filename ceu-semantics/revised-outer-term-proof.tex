@@ -1,0 +1,316 @@
+\begin{proof}
+  By induction on the structure of programs.
+  \begin{case}  
+  \item$p=\ceu{\Await(e)}$, for some~$e\in{E}$.  By~\Cref{def:orig:blocked}
+    $\blocked(\ceu{\Await(e)},\alpha,m) = 0$, therefore
+    by~\Cref{def:orig:outer-step} and by axiom~\eqref{def:orig:inner:await}, 
+    $\delta=<\ceu{\Awaiting(e,n')},\alpha,m>$, with~$n'=n+1$.
+    %%
+  \item$p=\ceu{\Awaiting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
+    \todo{Precisa revisar esse caso}
+    \begin{case}
+      \item $e\ne \alpha_{[1]}$ or $n'\ne \|\alpha|$. By \Cref{def:orig:blocked},
+        $\blocked(\ceu{\Awaiting(e,n')},\alpha,m)=1$, therefore,
+        by~\Cref{def:orig:outer-step}, 
+        $\delta=<\ceu{\Awaiting(e,n')},\alpha_{[2]}\ldots\alpha_{[n]},m>$.
+        %%
+      \item otherwise, $\blocked(\ceu{\Awaiting(e,n')},\alpha,m)=0$.
+        Then there are two cases. Either $n'\leq n$ or $n'>n$.
+        If $n'\leq n$, then by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:awaiting}, $\delta=\<\ceu\Skip,\alpha,m>$.
+        Otherwise, if $n'>n$, then ...\todo{Aqui o teorema falha, pois
+          $\blocked(p...)=0$ e não existe $\delta$}.
+    \end{case}
+    %%
+  \item$p=\ceu{\Emit(e)}$, for some~$e\in{E}$.  By \Cref{def:orig:blocked},
+    $\blocked(\ceu{\Emit(e)},\alpha,m) = 0$, therefore
+    by~\Cref{def:orig:outer-step} and by axiom~\eqref{def:orig:inner:emit}, 
+    $\delta=\<\ceu{\Emitting(n')},e\alpha,m>$, with~$n'=\|\alpha|$.
+    %%
+  \item$p=\ceu{\Emitting(e,n')}$, for some~$e\in{E}$ and~$n'\in{N}$.
+    \begin{case}
+      \item $n = \|\alpha|$. By \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Emitting(e,n')},\alpha,m) = 0$, therefore
+      by~\Cref{def:orig:outer-step} and by axiom~\eqref{def:orig:inner:emitting}, 
+      $\delta=\<\ceu\Skip,\alpha,m>$.
+      %%
+      \item $n'\ne \|\alpha|$. By \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Emitting(e,n')},\alpha,m) = 1$, therefore
+      by~\Cref{def:orig:outer-step}
+      $\delta=\<\ceu{Emitting(e,n')},\alpha_{[2]}...\alpha_{[n]},m>$.
+    \end{case}
+    %%
+  \item$p=\ceu{\Ifelse{b}{p'}{p''}}$, for some~$b\in{B}$ and~$p'$,
+    $p''\in{P}$.
+    \begin{case}
+    \item$\eval(b,m)=1$.  By \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Ifelse{b}{p'}{p''}},\alpha,m) = 0$, therefore
+      by~\Cref{def:orig:outer-step} and by axiom~\eqref{def:orig:inner:if-true}, 
+      $\delta=\<\ceu{p'},\alpha,m>$.
+    %%
+    \item$\eval(b,m)=0$.  By \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Ifelse{b}{p'}{p''}},\alpha,m) = 0$, therefore
+      by~\Cref{def:orig:outer-step} and by axiom~\eqref{def:orig:inner:if-true}, 
+      $\delta=\<\ceu{p''},\alpha,m>$.
+    \end{case}
+    %%
+  \item$p=\ceu{p';p''}$, for some~$p'$, $p''\in{P}$. 
+    By \Cref{def:orig:blocked},
+    $\blocked(\ceu{p';p''},\alpha,m)=\blocked(\ceu{p'},\alpha,m)$.
+
+    \begin{case}
+      \item$p'=\ceu\Skip$.  By \Cref{def:orig:blocked},
+        $\blocked(\ceu\Skip,\alpha,m)=0$, therefore
+        by~\Cref{def:orig:outer-step} and by axiom~\eqref{def:orig:inner:seq-skip}, 
+        $\delta=\<\ceu{p''},\alpha,m>$.
+      %%
+      \item$p'=\ceu{\Attr{v}{a}}$, for some $v\in{V}$ and~$a\in{A}$.
+        By \Cref{def:orig:blocked}, $\blocked(\ceu{\Attr{v}{a}},\alpha,m)=0$,
+        therefore by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:seq-attr}, 
+        $\delta=\<\ceu{p''},\alpha,m[v/\eval(a)]>$.
+      %%
+      \item$p'=\ceu{\Break}$. By \Cref{def:orig:blocked},
+        $\blocked(\ceu\Break,\alpha,m)=0$, therefore
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:seq-break}, 
+        $\delta=\<\ceu\Break,\alpha,m>$.
+      %%
+      \item$p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.
+        By~\Cref{lem:orig:inner-step-or-blocked}, $p'$ either has an applicable
+        rule or $\blocked(\ceu{p'},\alpha,m)=1$.
+
+        If $\blocked(\ceu{p'},\alpha,m)=0$, then by
+        rule~\eqref{def:orig:inner:seq}, there is a $p_1'$ such as 
+        \begin{align*}
+          \<p',\alpha,m>\step{n}\<p_1',\alpha',m'>
+        \end{align*}
+        for some~$p_1'\in{P}$, $\alpha'\in{E}$ and~$m'\in\mathcal{M}$.
+        Thus, by~\Cref{def:orig:outer-step}, $\delta=\<p_1',\alpha',m'>$.
+
+        If, otherwise, $\blocked(\ceu{p'},\alpha,m)=1$, then
+        by~\Cref{def:orig:outer-step},
+        $\delta=\<\ceu{Emitting(e,n')},\alpha_{[2]}...\alpha_{[n]},m>$.
+    \end{case}
+  %   %%
+  \item$p=\ceu{\Loop{p'}}$.   By \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Loop{p'}},\alpha,m) = 0$, therefore
+      by~\Cref{def:orig:outer-step} and by axiom~\eqref{def:orig:inner:loop}, 
+      $\delta=\<\ceu{p'\Atloop{p'}},\alpha,m>$.
+    %%
+  \item$p=\ceu{p'\Atloop{p''}}$.
+    By \Cref{def:orig:blocked},
+    $\blocked(\ceu{p'\Atloop{p''}},\alpha,m)=\blocked(\ceu{p'},\alpha,m)$.
+    \begin{case}
+      \item$p'=\ceu\Skip$.  By \Cref{def:orig:blocked},
+      $\blocked(\ceu\Skip,\alpha,m) = 0$, therefore
+      by~\Cref{def:orig:outer-step} and by
+      axiom~\eqref{def:orig:inner:atloop-skip},
+      $\delta=\<\ceu{\Loop{p'}},\alpha,m>$.
+      %%
+      \item$p'=\ceu{\Attr{v}{a}}$, for some~$a\in{A}$, $v\in{V}$. 
+      By \Cref{def:orig:blocked},
+      $\blocked(\ceu{\Attr{v}{a}},\alpha,m) = 0$, therefore
+      by~\Cref{def:orig:outer-step} and by
+      axiom~\eqref{def:orig:inner:atloop-attr},
+      $\delta=\<\ceu{\Loop{p'}},\alpha,m[v/\eval(a)]>$.
+      %%
+      \item$p'=\ceu\Break$.  By \Cref{def:orig:blocked},
+      $\blocked(\ceu\Break,\alpha,m) = 0$, therefore
+      by~\Cref{def:orig:outer-step} and by
+      axiom~\eqref{def:orig:inner:atloop-break},
+      $\delta=\<\ceu\Skip,\alpha,m>$.
+      %%
+      \item $p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$ and.  
+        By~\Cref{lem:orig:inner-step-or-blocked}, $p'$ either has an applicable
+        rule or $\blocked(\ceu{p'},\alpha,m)=1$.
+
+        If $\blocked(\ceu{p'},\alpha,m)=0$, then by
+        rule~\eqref{def:orig:inner:atloop}, there is a $p_1'$ such as 
+        \begin{align*}
+          \<p',\alpha,m>\step{n}\<p_1',\alpha',m'>
+        \end{align*}
+        for some~$p_1'\in{P}, \alpha'\in{E}$ and $m'\in\mathcal{M}$.  
+        Thus, by~\Cref{def:orig:outer-step}, $\delta=\<p_1',\alpha',m'>$.
+        
+        If, otherwise, $\blocked(\ceu{p'},\alpha,m)=1$, then
+        by~\Cref{def:orig:outer-step},
+        $\delta=\<\ceu{p'\Atloop{p'}},\alpha_{[2]}...\alpha_{[n]},m>$.
+    \end{case}
+  %   %%
+  \item$p=\ceu{p'\And{p''}}$. By \Cref{def:orig:blocked},
+    $\blocked(\ceu{p'\And{p''}},\alpha,m)=\blocked(\ceu{p'},\alpha,m)\cdot\blocked(\ceu{p''},\alpha,m)$.
+    \begin{case}
+      \item$p'=\ceu\Skip$. By~\Cref{def:orig:blocked},
+        $\blocked(\ceu\Skip,\alpha,m) = 0$, therefore
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:and-skip-left},
+        $\delta=\<\ceu{p'},\alpha,m>$.
+        %%
+      \item$p''=\ceu\Skip$. 
+        There are two cases. Either $\blocked(\ceu{p'},\alpha,m)=0$
+        or $\blocked(\ceu{p'},\alpha,m)=1$. If $\blocked(\ceu{p'},\alpha,m)=0$,
+        then the derivation of~$\delta$ is similar
+        to~\Cref{thm:orig:term-outer:and}. 
+        Otherwise, if $\blocked(\ceu{p'},\alpha,m)=1$, then,
+        as by~\Cref{def:orig:blocked} $\blocked(\ceu\Skip,\alpha,m) = 0$,
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:and-skip-right},
+        $\delta=\<\ceu{p'},\alpha,m>$.
+        %%
+      \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and $a\in{A}$.
+        By~\Cref{def:orig:blocked}, $\blocked(\ceu{\Attr{v}{a}},\alpha,m) = 0$,
+        therefore by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:and-attr-left},
+        $\delta=\<\ceu{p''},\alpha,m[v/\eval(a)]>$.
+        %%
+      \item$p''=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$, $a\in{A}$.
+        There are two cases. Either $\blocked(\ceu{p'},\alpha,m)=0$
+        or $\blocked(\ceu{p'},\alpha,m)=1$. If $\blocked(\ceu{p'},\alpha,m)=0$,
+        then the derivation of~$\delta$ is similar
+        to~\Cref{thm:orig:term-outer:and}. 
+        Otherwise, if $\blocked(\ceu{p'},\alpha,m)=1$, then,
+        as by~\Cref{def:orig:blocked} 
+        $\blocked(\ceu{\Attr{v}{a}},\alpha,m) = 0$,
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:and-attr-right},
+        $\delta=\<\ceu{p'},\alpha,m[v/\eval(a)]>$.
+        %%
+      \item$p'=\ceu\Break$. By~\Cref{def:orig:blocked},
+        $\blocked(\ceu\Break,\alpha,m) = 0$, therefore
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:and-break-left},
+        $\delta=\<\ceu{\clear(p'');\Break},\alpha,m>$.
+        %%
+      \item$p''=\ceu\Break$.
+        There are two cases. Either $\blocked(\ceu{p'},\alpha,m)=0$
+        or $\blocked(\ceu{p'},\alpha,m)=1$. If $\blocked(\ceu{p'},\alpha,m)=0$,
+        then the derivation of~$\delta$ is similar
+        to~\Cref{thm:orig:term-outer:and}. 
+        Otherwise, if $\blocked(\ceu{p'},\alpha,m)=1$, then,
+        as by~\Cref{def:orig:blocked} $\blocked(\ceu\Break,\alpha,m) = 0$,
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:and-break-right},
+        $\delta=\<\ceu{\clear(p');\Break},\alpha,m>$.
+        %%
+    \item\label{thm:orig:term-outer:and}
+        $p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$ and 
+        $p''\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  
+
+        By~\Cref{lem:orig:inner-step-or-blocked}, $p'$ either has an applicable
+        rule or $\blocked(\ceu{p'},\alpha,m)=1$.
+
+        If $\blocked(\ceu{p'},\alpha,m)=0$, then by
+        rule~\eqref{def:orig:inner:and-left}, there is a $p_1'$ such as 
+        \begin{align*}
+          \<p',\alpha,m>\step{n}\<p_1',\alpha',m'>
+        \end{align*}
+        for some~$p_1'\in{P}, \alpha'\in{E}$ and $m'\in\mathcal{M}$.  
+        Thus, by~\Cref{def:orig:outer-step}, $\delta=\<p_1',\alpha',m'>$.
+        
+        If, otherwise, $\blocked(\ceu{p'},\alpha,m)=1$, then there
+        are two cases. Either~$\blocked(\ceu{p''},\alpha,m)=0$ 
+        or~$\blocked(\ceu{p''},\alpha,m)=1$. 
+
+        If $\blocked(\ceu{p''},\alpha,m)=0$, then by
+        rule~\eqref{def:orig:inner:and-right}, there is a $p_1''$ such as 
+        \begin{align*}
+          \<p'',\alpha,m>\step{n}\<p_1'',\alpha'',m''>
+        \end{align*}
+        for some~$p_1''\in{P}, \alpha''\in{E}$ and $m''\in\mathcal{M}$.  
+        Thus, by~\Cref{def:orig:outer-step}, $\delta=\<p_1'',\alpha'',m''>$.
+
+        If, otherwise, $\blocked(\ceu{p''},\alpha,m)=1$, then
+        by~\Cref{def:orig:outer-step},
+        $\delta=\<\ceu{p'\And{p'}},\alpha_{[2]}...\alpha_{[n]},m>$.
+    \end{case}
+    %%
+  \item$p=\ceu{p'\Or{p''}}$. By \Cref{def:orig:blocked},
+    $\blocked(\ceu{p'\Or{p''}},\alpha,m)=\blocked(\ceu{p'},\alpha,m)\cdot\blocked(\ceu{p''},\alpha,m)$.
+    \begin{case}
+      \item$p'=\ceu\Skip$. By~\Cref{def:orig:blocked},
+        $\blocked(\ceu\Skip,\alpha,m) = 0$, therefore
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:or-skip-left},
+        $\delta=\<\ceu{\clear(p')},\alpha,m>$.
+        %%
+      \item$p''=\ceu\Skip$. 
+        There are two cases. Either $\blocked(\ceu{p'},\alpha,m)=0$
+        or $\blocked(\ceu{p'},\alpha,m)=1$. If $\blocked(\ceu{p'},\alpha,m)=0$,
+        then the derivation of~$\delta$ is similar
+        to~\Cref{thm:orig:term-outer:or}. 
+        Otherwise, if $\blocked(\ceu{p'},\alpha,m)=1$, then,
+        as by~\Cref{def:orig:blocked} $\blocked(\ceu\Skip,\alpha,m) = 0$,
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:or-skip-right},
+        $\delta=\<\ceu{\clear(p')},\alpha,m>$.
+
+        %%
+      \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and $a\in{A}$.
+        By~\Cref{def:orig:blocked}, $\blocked(\ceu{\Attr{v}{a}},\alpha,m) = 0$,
+        therefore by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:or-attr-left},
+        $\delta=\<\ceu{\clear(p'')},\alpha,m[v/\eval(a)]>$.
+        %%
+      \item$p''=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$, $a\in{A}$.
+        There are two cases. Either $\blocked(\ceu{p'},\alpha,m)=0$
+        or $\blocked(\ceu{p'},\alpha,m)=1$. If $\blocked(\ceu{p'},\alpha,m)=0$,
+        then the derivation of~$\delta$ is similar
+        to~\Cref{thm:orig:term-outer:or}. 
+        Otherwise, if $\blocked(\ceu{p'},\alpha,m)=1$, then,
+        as by~\Cref{def:orig:blocked} $\blocked(\ceu{\Attr{v}{a}},\alpha,m) = 0$,
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:or-attr-right},
+        $\delta=\<\ceu{\clear(p')},\alpha,m[v/\eval(a)]>$.
+        %%
+      \item$p'=\ceu\Break$. By~\Cref{def:orig:blocked},
+        $\blocked(\ceu\Break,\alpha,m) = 0$, therefore
+        by~\Cref{def:orig:outer-step} and by
+        axiom~\eqref{def:orig:inner:or-break-left},
+        $\delta=\<\ceu{\clear(p'');\Break},\alpha,m>$.
+        %%
+      \item$p''=\ceu\Break$.
+        There are two cases. Either $\blocked(\ceu{p'},\alpha,m)=0$
+        or $\blocked(\ceu{p'},\alpha,m)=1$. If $\blocked(\ceu{p'},\alpha,m)=0$,
+        then the derivation of~$\delta$ is similar
+        to~\Cref{thm:orig:term-outer:or}. 
+        Otherwise, if $\blocked(\ceu{p'},\alpha,m)=1$, then,
+        as by~\Cref{def:orig:blocked} $\blocked(\ceu\Break,\alpha,m) = 0$,
+        by~\Cref{def:orig:outer-step} and 
+        axiom~\eqref{def:orig:inner:or-break-right},
+        $\delta=\<\ceu{\clear(p');\Break},\alpha,m>$.
+        %%
+    \item\label{thm:orig:term-outer:or}
+        $p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$ and 
+        $p''\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  
+
+        By~\Cref{lem:orig:inner-step-or-blocked}, $p'$ either has an applicable
+        rule or $\blocked(\ceu{p'},\alpha,m)=1$.
+
+        If $\blocked(\ceu{p'},\alpha,m)=0$, then by
+        rule~\eqref{def:orig:inner:or-left}, there is a $p_1'$ such as 
+        \begin{align*}
+          \<p',\alpha,m>\step{n}\<p_1',\alpha',m'>
+        \end{align*}
+        for some~$p_1'\in{P}, \alpha'\in{E}$ and $m'\in\mathcal{M}$.  
+        Thus, by~\Cref{def:orig:outer-step}, $\delta=\<p_1',\alpha',m'>$.
+        
+        If, otherwise, $\blocked(\ceu{p'},\alpha,m)=1$, then there
+        are two cases. Either~$\blocked(\ceu{p''},\alpha,m)=0$ 
+        or~$\blocked(\ceu{p''},\alpha,m)=1$. 
+
+        If $\blocked(\ceu{p''},\alpha,m)=0$, then by
+        rule~\eqref{def:orig:inner:or-right}, there is a $p_1''$ such as 
+        \begin{align*}
+          \<p'',\alpha,m>\step{n}\<p_1'',\alpha'',m''>
+        \end{align*}
+        for some~$p_1''\in{P}, \alpha''\in{E}$ and $m''\in\mathcal{M}$.  
+        Thus, by~\Cref{def:orig:outer-step}, $\delta=\<p_1'',\alpha'',m''>$.
+
+        If, otherwise, $\blocked(\ceu{p''},\alpha,m)=1$, then
+        by~\Cref{def:orig:outer-step},
+        $\delta=\<\ceu{p'\Or{p'}},\alpha_{[2]}...\alpha_{[n]},m>$.
+    \end{case}
+  \end{case}
+\end{proof}
+

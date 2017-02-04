@@ -456,16 +456,17 @@ advances blocked programs.  \TODO{Improve this description.}
 
 \begin{theorem}[label={thm:orig:term-outer},
   name={Termination of the outer-step relation}]
-  For all~$p\in{P}$, $\alpha\in{E}$ and~$m\in\mathcal{M}$,
+  For all~$p\in{P}$, $\alpha\in{E}$,
+  $\alpha=\alpha_{[1]}...\alpha_{[n]}$ ($\alpha_{[1]}$ is in the 
+  top of stack $\alpha$) and~$m\in\mathcal{M}$,
+
   if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then
   \[
     \exists{\delta\in\Delta}(\<p,\alpha,m>\ostep{n}\delta).
   \]
 \end{theorem}
-\begin{proof}
-  \TODO{Directly from \Cref{lem:orig:inner-step-or-blocked}.}
-\end{proof}
 
+\input{revised-outer-term-proof}
 
 \subsection{The reaction relation}
 \label{sub:orig:reaction}
