@@ -1,3 +1,9 @@
+\Ceu\ compiler enforces the following additional restrition not stated in     
+the semantics: if $p=\ceu{\Loop{p'}}$, then either $\blocked(p')=1$ or
+$p'$ has a reachable $\ceu\Break$ statement.
+\todo{Não sei se ficou bom esse texto, especialmente pelo fato de computar 
+se um trecho de um programa é ``reachable'' ser um problema indecidível =p.}
+
 \begin{proof}
   By induction on the structure of programs.
   \begin{case}  
