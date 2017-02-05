@@ -1,0 +1,22 @@
+\begin{proof}
+  Let~$p\ne\ceu{\Skip,\Attr{v}{a},\Break}$.  By
+  \Cref{lem:orig:inner-step-or-blocked}, exactly one of the following hold:
+  \[
+    \exists{\delta\in\Delta}(\<p,\alpha,m>\step{n}\delta)
+    \quad\text{or}\quad \blocked(p,\alpha,n)=1.
+  \]
+  \begin{case}
+  \item$\<p,\alpha,m>\step{n}\<p',\alpha',m'>=\delta$
+    and~$\blocked(p,\alpha,n)=0$.  Then, by
+    rule~\eqref{def:orig:outer:advance},
+    \[
+      \<p,\alpha,m>\ostep{n}\<p',\alpha',m'>.
+    \]
+  \item There is no such~$\delta$ and~$\blocked(p,\alpha,n)=1$.
+    Then, by
+    rule~\eqref{def:orig:outer:pop},
+    \[
+      \<p,\alpha,m>\ostep{n}\<p,\pop(\alpha),m>.\qedhere
+    \]
+  \end{case}
+\end{proof}

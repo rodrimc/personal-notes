@@ -103,9 +103,10 @@
 \let\nil=\varepsilon
 \def\<#1>{\langle#1\rangle}
 \def\|#1|{\left|#1\right|}
-\def\eval{\mathit{eval}}
 \def\blocked{\mathit{blocked}}
 \def\clear{\mathit{clear}}
+\def\eval{\mathit{eval}}
+\def\pop{\mathit{pop}}
 \makeatletter
 \def\@raise#1#2#3{
   \setbox0=\hbox{#1}%
@@ -314,7 +315,7 @@ program.
     sequência o corpo das \emph{primeiras} ocorrências
     de~$\ceu{\protect\Fin}$ em cada trilha de~$p$, e retorna a sequência
     resultante.  A sintaxe do corpo de instruções~$\ceu{\protect\Fin}$ está
-    restrita à programas no conjunto restrito~$P'$, i.e., que não contenham
+    restrita a programas em~$P'\subseteq{P}$, viz., que não contém
     instruções~$\ceu{\protect\Await}$, $\ceu{\protect\Awaiting}$,
     $\ceu{\protect\Emit}$, $\ceu{\protect\Emitting}$, $\ceu{\protect\And}$,
     $\ceu{\protect\Or}$ e~$\ceu{\protect\Fin}$.  É isso?
@@ -404,6 +405,9 @@ $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
 The next lemma establishes that given a nontrivial program~$p$ either it is
 possible to advance~$p$ by an inner-step or all its trails are blocked, but
 not both.
+%%
+\FIXME{Faltou incluir~$\ceu{\protect\Fin{p}}$ na lista dos programas
+  triviais, i.e., que não avançam.}
 
 \begin{lemma}[label={lem:orig:inner-step-or-blocked}]
   For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
@@ -420,30 +424,46 @@ not both.
 \subsection{The reaction outer-step relation}
 \label{sub:orig:outer}
 
-From the previous inner-step relation we define an outer-step
-relation~($\ostep{}$) that when necessary pops the event stack and 
-advances blocked programs.  \TODO{Improve this description.}
+From the previous inner-step relation we define the outer-step
+relation~($\ostep{}$) which when necessary pops the event stack and advances
+blocked programs.  The auxiliary function~$\pop$ is used to pop the event
+stack.
+
+\begin{definition}[label={def:orig:pop}]
+  Function~$\pop\colon{E^*}\to{E^*}$ is defined as follows.
+  \begin{align*}
+    \pop(\nil)&=\nil\\
+    \pop(e\alpha)&=\alpha
+  \end{align*}
+\end{definition}
 
 \begin{definition}[label={def:orig:outer-step},name={Reaction outer-step}]
   \begin{alignat}{2}
     \label{def:orig:outer:advance}
-    &\AXC{$\<p,\alpha,m>\step{n}\<p',\alpha',m'>$}
+    &\hskip-3.45em
+    \AXC{$\<p,\alpha,m>\step{n}\<p',\alpha',m'>$}
     \UIC{$\<p,\alpha,m>\ostep{n}\<p',\alpha',m'>$}
     \DP
     &&\quad\text{if~$\blocked(p,\alpha,n)=0$}
     \\[1\jot]
     %%
     \label{def:orig:outer:pop}
-    &\hskip-.45em\<p,e\alpha,m>\ostep{n}\<p,\alpha,m>
-    &&\quad\text{if~$\blocked(p,\alpha,n)=1$}
+    \<p,e\alpha,m>
+    &\ostep{n}\<p,\alpha',m>
+    &&\quad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
+        \strut\enspace with~$\alpha'=\pop(\alpha)$}
   \end{alignat}
 \end{definition}
+
+The next two theorem establish that the outer-steps are deterministic and
+always terminate for nontrivial programs, i.e., that it is in fact the
+reaction outer-step relation is in fact a \emph{total} function (for
+nontrivial programs).
 
 \begin{theorem}[label={thm:orig:det-outer},
   name={Determinism of the outer-step relation}]
   For all~$p$, $p_1$, $p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$,
-  $\alpha=\alpha_{[1]}...\alpha_{[n]}$ ($\alpha_{[1]}$ is in the 
-  top of stack $\alpha$), $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
+  $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
   \begin{gather*}
     \text{if}\quad\<p,\alpha,m>\ostep{n}\<p_1,\alpha_1,m_1>
     \quad\text{and}\quad
@@ -451,22 +471,18 @@ advances blocked programs.  \TODO{Improve this description.}
     \text{then}\quad\<p_1,\alpha_1,m_1>=\<p_2,\alpha_2,m_2>.
   \end{gather*}
 \end{theorem}
-
-\input{revised-outer-det-proof}
+\input{revised-outer-det-proof2}
 
 \begin{theorem}[label={thm:orig:term-outer},
   name={Termination of the outer-step relation}]
-  For all~$p\in{P}$, $\alpha\in{E}$,
-  $\alpha=\alpha_{[1]}...\alpha_{[n]}$ ($\alpha_{[1]}$ is in the 
-  top of stack $\alpha$) and~$m\in\mathcal{M}$,
-
+  For all~$p\in{P}$, $\alpha\in{E}$, and~$m\in\mathcal{M}$,
   if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then
   \[
     \exists{\delta\in\Delta}(\<p,\alpha,m>\ostep{n}\delta).
   \]
 \end{theorem}
+\input{revised-outer-term-proof2}
 
-\input{revised-outer-term-proof}
 
 \subsection{The reaction relation}
 \label{sub:orig:reaction}
@@ -482,13 +498,24 @@ reaction relation evaluates it until the event stack becomes empty.
   \[
     \<p,\alpha,m>\react{n}\<p',m'>
     \quad\text{iff}\quad
-    \<p,\alpha,m>\ostep\ast\<p',\nil,m'>.
+    \<p,\alpha,m,n>\ostep\ast\<p',\nil,m',n>.
   \]
 \end{definition}
 
 The next two theorems establish, respectively, that reactions are
-deterministic and always terminate (for the nontrivial
-programs~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$).
+deterministic and always terminate (for nontrivial programs).  The proofs of
+these theorems depend on the assumption that every execution path within the
+body of a loop instruction ($\ceu{\Loop{p}}$) contains an occurrence
+of~$\ceu{\Break}$ or~$\ceu{\Await(e)}$.  This assumption is checked
+statically by the \Ceu\ compiler.
+%%
+\todo{Na nova semântica basta dizer que~$e$ é um evento externo.}
+
+\TODO{Antes do determinismo e terminação precisa de um lema para grantir a
+  correção da definição anterior, i.e., que um número finito de passos
+  eventualmente leva a uma configuração com pilha vazia.  Nessa prova vai
+  ser preciso usar a hipótese do loop.  A prova deve sair por indução no
+  número de passos.}
 
 \begin{theorem}[label={thm:orig:det-react},
   name={Determinism of the reaction relation}]

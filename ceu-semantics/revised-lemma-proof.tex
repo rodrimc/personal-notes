@@ -321,10 +321,11 @@
       \end{align*}
     \end{case}
     %%
-  \item$p=\ceu{p'\Or{p''}}$, for some~$p'\in{P}$,
+  \item$p=\ceu{p'\Or{p''}}$.
     \begin{case}
     \item$p'=\ceu{\Skip}$.  By axiom~\eqref{def:orig:inner:or-skip-left},
-      $\delta=\<\ceu{\clear(p'')},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      $\delta=\<\ceu{\clear(p'')},\alpha,m>$, and
+      by~\Cref{def:orig:blocked},
       \begin{align*}
         \blocked(\ceu{\Skip\Or\;p''},\alpha,n)
         &=\blocked(\ceu{\Skip},\alpha,n)
@@ -373,8 +374,10 @@
 
       If, however,~$\blocked(p',\alpha,n)=1$, then by
       axiom~\eqref{def:orig:inner:or-attr-right},
-      $\delta=\<\ceu{\clear(p')},\alpha,m[v/\eval(a)]>$, and by
-      \Cref{def:orig:blocked},
+      \[
+        \delta=\<\ceu{\clear(p')},\alpha,m[v/\eval(a)]>,
+      \]
+      and by \Cref{def:orig:blocked},
       \begin{align*}
         \blocked(\ceu{p'\Or\;\Attr{v}{a}},\alpha,n)
         &=\blocked(p',\alpha,n)\cdot\blocked(\ceu{\Attr{v}{a}},\alpha,n)\\
@@ -401,13 +404,15 @@
 
       If, however,~$\blocked(p',\alpha,n)=1$, then by
       axiom~\eqref{def:orig:inner:or-break-right},
-      $\delta=\<\ceu{\clear(p');\Break},\alpha,m>$, and by~\Cref{def:orig:blocked},
+      \[
+        \delta=\<\ceu{\clear(p');\Break},\alpha,m>,
+      \]
+      and by~\Cref{def:orig:blocked},
       \begin{align*}
         \blocked(\ceu{p'\Or\;\Break})
         &=\blocked(p')\cdot\blocked(\ceu{\Break},\alpha,n)\\
         &=1\cdot0=0.
       \end{align*}
-
     \item\label{thm:orig:lemma:or}
       $p',p''\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$.  By induction
       hypothesis, exactly one of the following hold:
@@ -456,111 +461,8 @@
       \begin{align*}
         \blocked(\ceu{p'\Or{p''}},\alpha,n)
         &=\blocked(p',\alpha,n)\cdot\blocked(p'',\alpha,n)\\
-        &=1\cdot1=1.
+        &=1\cdot1=1.\qedhere
       \end{align*}
     \end{case}
-    % By \Cref{def:orig:blocked}
-    %  \[
-    %    \blocked(\ceu{p'\Or{p''}},\alpha,n)=
-    %    \blocked(p',\alpha,n)\cdot\blocked(p'',\alpha,n)
-    %  \]
-    % \begin{case}
-    % \item$p'=\ceu{\Skip}$.  
-    %   By axiom~\eqref{def:orig:inner:or-skip-left},
-    %   $\delta=\<\ceu{\clear(p'')},\alpha,m>$, and by~\Cref{def:orig:blocked},
-    %   $\blocked(\ceu{\Skip},\alpha,n)=0$.
-    %   %%
-    % \item$p''=\ceu{\Skip}$.  
-    %   By induction hypothesis, exactly one of the following hold:
-    %     \[
-    %       \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
-    %       \quad\text{or}\quad
-    %       \blocked(p',\alpha,n)=1.
-    %     \]
-
-    %     If~$\blocked(p',\alpha,m)=0$, then the derivation of $\delta$ is
-    %     similar to ~\Cref{thm:orig:lemma:or}.
-
-    %     If, however,~$\blocked(p',\alpha,n)=1$, then by
-    %     axiom~\eqref{def:orig:inner:or-skip-right},
-    %     $\delta=\<\ceu{\clear(p')},\alpha,m>$.
-
-    %     Either way, $\blocked(\ceu\Skip,\alpha,n)=0$.
-    %   %%
-    % \item$p'=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.  By
-    %   axiom~\eqref{def:orig:inner:or-attr-left},
-    %   $\delta=\<\ceu{\clear(p'')},\alpha,m[v/\eval(a)]>$, and by~\Cref{def:orig:blocked},
-    %   $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
-    %   %%
-    % \item$p''=\ceu{\Attr{v}{a}}$, for some~$v\in{V}$ and~$a\in{A}$.
-    %   By induction hypothesis, exactly one of the following hold:
-    %     \[
-    %       \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
-    %       \quad\text{or}\quad
-    %       \blocked(p',\alpha,n)=1.
-    %     \]
-
-    %     If~$\blocked(p',\alpha,m)=0$, then the derivation of $\delta$ is
-    %     similar to ~\Cref{thm:orig:lemma:or}.
-
-    %     If, however,~$\blocked(p',\alpha,n)=1$, then by
-    %     axiom~\eqref{def:orig:inner:or-attr-right},
-    %     $\delta=\<\ceu{\clear(p')},\alpha,m[v/\eval(a)]>$.
-
-    %     Either way, $\blocked(\ceu{\Attr{v}{a}},\alpha,n)=0$.
-    % %%
-    % \item$p'=\ceu{\Break}$.  By axiom~\eqref{def:orig:inner:or-break-left},
-    %   $\delta=\<\ceu{\clear(p'')},\alpha,m>$, and by~\Cref{def:orig:blocked},
-    %   $\blocked(\ceu{\Break},\alpha,n)=0$.
-    % %%
-    % \item$p''=\ceu\Break$.
-    %   By induction hypothesis, exactly one of the following hold:
-    %     \[
-    %       \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
-    %       \quad\text{or}\quad
-    %       \blocked(p',\alpha,n)=1.
-    %     \]
-
-    %     If~$\blocked(p',\alpha,n)=0$, then the derivation of $\delta$ is
-    %     similar to ~\Cref{thm:orig:lemma:or}.
-
-    %     If, however,~$\blocked(p',\alpha,n)=1$, then by
-    %     axiom~\eqref{def:orig:inner:or-break-right},
-    %     $\delta=\<\clear(p'),\alpha,m>$.
-
-    %     Either way, $\blocked(\ceu\Break,\alpha,n)=0$.
-    % %%
-    %   \item\label{thm:orig:lemma:or}
-    %     $p'\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$.  By induction
-    %     hypothesis, exactly one of the following hold:
-    %     \[
-    %       \exists{d'\in\Delta}(\<p',\alpha,m>\step{n}d')
-    %       \quad\text{or}\quad
-    %       \blocked(p',\alpha,n)=1.
-    %     \]
-
-    %     Suppose~$\<p',\alpha,m>\step{n}\<p_1',\alpha',m'>$, for
-    %     some~$p_1'\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
-    %     by rule~\eqref{def:orig:inner:or-left},
-    %     \[
-    %       \<\ceu{p'\Or{p''}},\alpha,m>\step{n}\<\ceu{p'_1\Or{p''}},\alpha',m'>.
-    %     \]
-    %     And by \Cref{def:orig:blocked},
-    %     \[
-    %       \blocked(\ceu{p'\Or{p''}},\alpha,n)=\blocked(p',\alpha,n)\cdot\blocked(p'',\alpha,n)=0.
-    %     \]
-
-    %     Now suppose~$\<p'',\alpha,m>\step{n}\<p_1'',\alpha',m'>$, for
-    %     some~$p_1''\in{P}$, $\alpha'\in{E^*}$, and~$m'\in\mathcal{M}$.  Then
-    %     by rule~\eqref{def:orig:inner:or-right},
-    %     \[
-    %       \<\ceu{p'\Or{p''}},\alpha,m>\step{n}\<\ceu{p'\And{p_1''}},\alpha',m'>.
-    %     \]
-    %     And by \Cref{def:orig:blocked},
-    %     \[
-    %       \blocked(\ceu{p'\Or{p''}},\alpha,n)=\blocked(p',\alpha,n)\cdot\blocked(p'',\alpha,n)=0.
-    %     \]
-    % \end{case}
   \end{case}
 \end{proof}
-

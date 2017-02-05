@@ -1,0 +1,25 @@
+\begin{proof}
+  The implication is vacuously true for the trivial programs~$\ceu{\Skip}$,
+  $\ceu{\Attr{v}{a}}$, and~$\ceu{\Break}$.  Suppose~$p$ is not one of these
+  trivial programs, and suppose
+  \[
+    d_1\Vdash\<p,\alpha,m>\step{n}\<p_1,\alpha_1,m_1>
+    \quad\text{and}\quad
+    d_2\Vdash\<p,\alpha,m>\step{n}\<p_2,\alpha_2,m_2>,
+  \]
+  for some derivations~$d_1$ and~$d_2$.  By
+  \Cref{lem:orig:inner-step-or-blocked}, exactly one of the following hold:
+  \[
+    \exists{\delta\in\Delta}(\<p,\alpha,m>\step{n}\delta)
+    \quad\text{or}\quad \blocked(p,\alpha,n)=1.
+  \]
+  \begin{case}
+  \item$\<p,\alpha,m>\step{n}\<p',\alpha',m'>=\delta$
+    and~$\blocked(p,\alpha,n)=0$.  Then~$d_1$ and~$d_2$ are instances of
+    rule~\eqref{def:orig:outer:advance}.  Thus~$p_1=p_2=p'$,
+    $\alpha_1=\alpha_2=\alpha'$, and~$m_1=m_2=m'$.
+  \item There is no such~$\delta$ and~$\blocked(p,\alpha,n)=1$.  Then~$d_1$
+    and~$d_2$ are instances of rule~\eqref{def:orig:outer:pop}.  Thus
+    $p_1=p_2=p$, $m_1=m_2=m$, and~$\alpha_1=\alpha_2=\pop(\alpha)$.\qedhere
+  \end{case}
+\end{proof}
