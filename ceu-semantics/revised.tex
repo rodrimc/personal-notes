@@ -145,6 +145,7 @@
   \def\Awaiting{\@ceuop{@awaiting}}%
   \def\Emitting{\@ceuop{@emitting}}%
   \def\Atloop{\@ceuop{@loop}}%
+  \def\Term{\@ceuop{$\epsilon$}}%
   \def\Final{\@ceuop{halt}}%
   \def\True{\@ceuop{$\top$}}%
   \def\False{\@ceuop{$\bot$}}%
@@ -204,6 +205,7 @@ grammar:
       \mid& \ceu{\Awaiting(e,n)}        & awaiting~$e$ since reaction~$n$\cr
       \mid& \ceu{\Emitting(e,n)}        & emitting~$e$ on stack level~$n$\cr
       \mid& \ceu{p_1\Atloop p_2}        & unwinded loop\cr
+      \mid& \MARK{\ceu{\Term}}         & final state\cr
     }%
   }%
 }\hfil%
@@ -251,60 +253,63 @@ program.
   %%
   \todo{Intuitivamente, um programa~$p$ está bloqueado se toda trilha de~$p$
     está~(i) aguardando ($\ceu{\protect\Awaiting}$) algum evento que não
-    está no topo da pilha ou que foi emitido na reação atual, ou~(ii) acabou
+    está no topo da pilha ou que foi emitido na reação atual, ~(ii) acabou
     de emitir um evento ($\ceu{\protect\Emitting}$) e esse evento ainda não
-    foi consumido (i.e., está na pilha).  É isso?}
+    foi consumido (i.e., está na pilha),~\MARK{(iii) ou as trilhas estão
+    paradas num $\ceu{\protect\Fin}$}.  É isso?}
   %%
   \begin{align*}
-    \blocked(\ceu{\Skip},e\alpha,n)
+    \blocked(\ceu\Term,\alpha,n)
+    &=1\\
+    \blocked(\ceu{\Skip},\alpha,n)
     &=0\\
     %%
-    \blocked(\ceu{\Attr{v}{a}},e\alpha,n)
+    \blocked(\ceu{\Attr{v}{a}},\alpha,n)
     &=0\\
     %%
-    \blocked(\ceu{\Await(e')},e\alpha,n)
+    \blocked(\ceu{\Await(e)},\alpha,n)
     &=0\\
     %%
-    \blocked(\ceu{\Emit(e')},e\alpha,n)
+    \blocked(\ceu{\Emit(e)},\alpha,n)
     &=0\\
     %%
-    \blocked(\ceu{\Break},e\alpha,n)
+    \blocked(\ceu{\Break},\alpha,n)
     &=0\\
     %%
-    \blocked(\ceu{\Ifelse{b}{p_1}{p_2}},e\alpha,n)
+    \blocked(\ceu{\Ifelse{b}{p_1}{p_2}},\alpha,n)
     &=0\\
     %%
-    \blocked(\ceu{p_1;p_2},e\alpha,n)
-    &=\blocked(p_1,e\alpha,n)\\
+    \blocked(\ceu{p_1;p_2},\alpha,n)
+    &=\blocked(p_1,\alpha,n)\\
     %%
-    \blocked(\ceu{\Loop p},e\alpha,n)
+    \blocked(\ceu{\Loop p},\alpha,n)
     &=0\\
     %%
-    \blocked(\ceu{p_1\And p_2},e\alpha,n)
-    &=\blocked(p_1,e\alpha,n)\cdot\blocked(p_2,e\alpha,n)\\
+    \blocked(\ceu{p_1\And p_2},\alpha,n)
+    &=\blocked(p_1,\alpha,n)\cdot\blocked(p_2,\alpha,n)\\
     %%
-    \blocked(\ceu{p_1\Or p_2},e\alpha,n)
-    &=\blocked(p_1,e\alpha,n)\cdot\blocked(p_2,e\alpha,n)\\
+    \blocked(\ceu{p_1\Or p_2},\alpha,n)
+    &=\blocked(p_1,\alpha,n)\cdot\blocked(p_2,\alpha,n)\\
     %%
-    \blocked(\ceu{\Fin p_1},e\alpha,n)
-    &=0\\
+    \blocked(\ceu{\Fin p_1},\alpha,n)
+    &=1\\
     % %%
     \blocked(\ceu{\Awaiting(e',n')},e\alpha,n)
     &=
       \begin{cases}
-        1 &\text{if~$e\ne{e'}$ or~$n=n'$}\\
+        1 &\text{if~$e\ne{e'}$ or~$n'>n$}\\
         0 &\text{otherwise}
       \end{cases}\\
     %%
-    \blocked(\ceu{\Emitting(n')},e\alpha,n)
+    \blocked(\ceu{\Emitting(n')},\alpha,n)
     &=
       \begin{cases}
-        1 &\text{if~}\|e\alpha|\ne{n'}\\
+        1 &\text{if~}\|\alpha|\ne{n'}\\
         0 &\text{otherwise}
       \end{cases}\\
     %%
-    \blocked(\ceu{p_1\Atloop p_2},e\alpha,n)
-    &=\blocked(p_1,e\alpha,n)
+    \blocked(\ceu{p_1\Atloop p_2},\alpha,n)
+    &=\blocked(p_1,\alpha,n)
   \end{align*}
 \end{definition}
 
@@ -346,7 +351,7 @@ program.
     &=\clear(p_1)\\
     %%
     \clear(\ceu{\Loop p})
-    &=\clear(p)\\
+    &=\ceu{\Skip}\\
     %%
     \clear(\ceu{p_1\And p_2})
     &=\clear(p_1);\clear(p_2)\\
