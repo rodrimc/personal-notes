@@ -6,11 +6,20 @@
     \quad\text{and}\quad
     d_2\Vdash\<p,\alpha,m>\step{n}\<p_2,\alpha_2,m_2>,
   \]
-  for some derivations~$d_1$ and~$d_2$.  Then there are ten possibilities
+  for some derivations~$d_1$ and~$d_2$.  Then there are XXXXX possibilities
   depending on the structure of~$p$.  (Note that the implication is
-  trivially true for~$p=\ceu{\Skip,\Attr{v}{a},\Break}$, as there are no
-  rules to evaluate such programs.)
+  trivially true for~$p=\ceu{\Break}$, as there are no rules to evaluate 
+  such program.)
   \begin{case}
+  \item$p=\ceu\Skip$.  Then~$d_1$ and~$d_2$ are instances of
+    axiom~\eqref{def:orig:inner:skip}, and as such,
+    $p_1=p_2=\ceu\Term$, and $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{\Attr{v}{a}}$.  Then~$d_1$ and~$d_2$ are instances of
+    axiom~\eqref{def:orig:inner:attr}, and as such,
+    $p_1=p_2=\ceu\Skip$, and $\alpha_1=\alpha_2=\alpha$
+    and~$m_1=m_2=m[v/\eval(a)]$.
+    %%
   \item$p=\ceu{\Await(e)}$.  Then~$d_1$ and~$d_2$ are instances of
     axiom~\eqref{def:orig:inner:await}, and as such,
     $p_1=p_2=\ceu{\Awaiting(e,n')}$ with~$n'=n+1$, and
@@ -46,16 +55,16 @@
       axiom~\eqref{def:orig:inner:seq-skip}, and as such, $p_1=p_2=p''$,
       $\alpha_1=\alpha_2=\alpha$ and $m_1=m_2=m$.
       %%
-    \item$p'=\ceu{\Attr{v}{a}}$.  Then~$d_1$ and~$d_2$ are instances of
-      axiom~\eqref{def:orig:inner:seq-attr}, and as such, $p_1=p_2=p''$,
-      $\alpha_1=\alpha_2=\alpha$ and, as~$\eval$ is a total function,
-      $m_1=m_2=m[v/\eval(a)]$.
+    % \item$p'=\ceu{\Attr{v}{a}}$.  Then~$d_1$ and~$d_2$ are instances of
+    %   axiom~\eqref{def:orig:inner:seq-attr}, and as such, $p_1=p_2=p''$,
+    %   $\alpha_1=\alpha_2=\alpha$ and, as~$\eval$ is a total function,
+    %   $m_1=m_2=m[v/\eval(a)]$.
       %%
     \item$p'=\ceu{\Break}$.  Then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:seq-break}, and as such, $p_1=p_2=p'$,
       $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
       %%
-    \item$p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$ and~$d_2$
+    \item$p'\ne\ceu{\Skip,\Break}$.  Then~$d_1$ and~$d_2$
       are instances of rule~\eqref{def:orig:inner:seq}.  Thus there are
       derivations~$d_1'$ and~$d_2'$ such that
       \begin{align*}
@@ -83,17 +92,17 @@
       $p_1=p_2=\ceu{\Loop{p'}}$, $\alpha_1=\alpha_2=\alpha$,
       and~$m_1=m_2=m$.
       %%
-    \item$p=\ceu{\Attr{v}{a}\Atloop{p'}}$.  Then~$d_1$ and~$d_2$ are
-      instances of axiom~\eqref{def:orig:inner:atloop-attr}, and as such,
-      $p_1=p_2=\ceu{\Loop{p'}}$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$
-      is a total function, $m_1=m_2=m[v/\eval(a)]$.
+    % \item$p=\ceu{\Attr{v}{a}\Atloop{p'}}$.  Then~$d_1$ and~$d_2$ are
+    %   instances of axiom~\eqref{def:orig:inner:atloop-attr}, and as such,
+    %   $p_1=p_2=\ceu{\Loop{p'}}$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$
+    %   is a total function, $m_1=m_2=m[v/\eval(a)]$.
       %%
     \item$p=\ceu{\Break\Atloop{p'}}$.  Then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:atloop-break}, and as such,
       $p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
       %%
     \item$p=\ceu{p'\Atloop{p''}}$
-      with~$p'\ne\ceu{\Skip,\Attr{v}{a}},\ceu{\Break}$.  Then~$d_1$
+      with~$p'\ne\ceu{\Skip,\Break}$.  Then~$d_1$
       and~$d_2$ are instances of rule~\eqref{def:orig:inner:atloop}.  Thus
       there are derivations~$d_1'$ and~$d_2'$ such that
       \[
@@ -116,33 +125,33 @@
       and as such, $p_1=p_2=p''$, $\alpha_1=\alpha_2=\alpha$, and
       $m_1=m_2=m$.
       %%
-    \item$p'\ne\ceu{\Skip,\Attr{v}{a},\Break}$ and~$p''=\ceu\Skip$.
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$p''=\ceu\Skip$.
       If~$\blocked(p',\alpha,m)=0$, this case
       becomes~\Cref{thm:orig:det-inner:and-left}.  Otherwise,
       if~$\blocked(p',\alpha,m)=1$, $d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:and-skip-right}, and as such,
       $p_1=p_2=p'$, $\alpha_1=\alpha_2=\alpha$, and $m_1=m_2=m$.
       %%
-    \item\label{thm:orig:det-inner:and-attr-left} $p'=\ceu{\Attr{v}{a}}$.
-      Then~$d_1$ and~$d_2$ are instances of
-      axiom~\eqref{def:orig:inner:and-attr-left}, and as such,
-      $p_1=p_2=p''$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ is a total
-      function, $m_1=m_2=m[v/\eval(a)]$.
+    % \item\label{thm:orig:det-inner:and-attr-left} $p'=\ceu{\Attr{v}{a}}$.
+    %   Then~$d_1$ and~$d_2$ are instances of
+    %   axiom~\eqref{def:orig:inner:and-attr-left}, and as such,
+    %   $p_1=p_2=p''$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ is a total
+    %   function, $m_1=m_2=m[v/\eval(a)]$.
       %%
-    \item $p'\ne\ceu{\Skip,\Attr{v}{a},\Break}$ and~$p''=\ceu{\Attr{v}{a}}$.
-      If~$\blocked(p',\alpha,m)=0$, this case
-      becomes~\Cref{thm:orig:det-inner:and-left}.  Otherwise,
-      if~$\blocked(p',\alpha,m)=1$, then~$d_1$ and~$d_2$ are instances of
-      axiom~\eqref{def:orig:inner:and-attr-right}, and as such,
-      $p_1=p_2=p'$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ is a total
-      function, $m_1=m_2=m[v/\eval(a)]$.
+    % \item $p'\ne\ceu{\Skip,\Attr{v}{a},\Break}$ and~$p''=\ceu{\Attr{v}{a}}$.
+    %   If~$\blocked(p',\alpha,m)=0$, this case
+    %   becomes~\Cref{thm:orig:det-inner:and-left}.  Otherwise,
+    %   if~$\blocked(p',\alpha,m)=1$, then~$d_1$ and~$d_2$ are instances of
+    %   axiom~\eqref{def:orig:inner:and-attr-right}, and as such,
+    %   $p_1=p_2=p'$, $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ is a total
+    %   function, $m_1=m_2=m[v/\eval(a)]$.
       %%
     \item $p'=\ceu\Break$.  Then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:and-break-left}, and as such,
       $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
       function, $p_1=p_2=\ceu{\clear(p'');\Break}$.
       %%
-    \item $p'\ne\ceu{\Skip,\Attr{v}{a},\Break}$ and~$p''=\ceu\Break$.
+    \item $p'\ne\ceu{\Skip,\Break}$ and~$p''=\ceu\Break$.
       If~$\blocked(p',\alpha,m)=0$, this case becomes
       \Cref{thm:orig:det-inner:and-left}.  Otherwise,
       if~$\blocked(p',\alpha,m)=1$, then~$d_1$ and~$d_2$ are instances of
@@ -151,7 +160,7 @@
       function, $p_1=p_2=\ceu{\clear(p');\Break}$.
       %%
     \item\label{thm:orig:det-inner:and-left}
-      $p',p''\ne\ceu\Skip,\ceu{\Attr{v}{a}},\ceu\Break$.
+      $p',p''\ne\ceu\Skip,\ceu\Break$.
       If~$\blocked(p',\alpha,m)=0$, $d_1$~and~$d_2$ are instances
       of~\eqref{def:orig:inner:and-left}.  Thus there are derivations~$d_1'$
       and~$d_2'$ such that
@@ -190,7 +199,7 @@
       $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total,
       $p_1=p_2=\ceu\clear(p'')$.
       %%
-    \item $p'\ne\ceu{\Skip,\Attr{v}{a},\Break}$ and~$p''=\ceu\Skip$.
+    \item $p'\ne\ceu{\Skip,\Break}$ and~$p''=\ceu\Skip$.
       If~$\blocked(p',\alpha,m)=0$, this case becomes
       \Cref{thm:orig:det-inner:or-left}.  Otherwise,
       if~$\blocked(p',\alpha,m)=1$, then~$d_1$ and~$d_2$ are instances of
@@ -198,26 +207,26 @@
       $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
       function, $p_1=p_2=\ceu\clear(p')$.
       %%
-    \item\label{thm:orig:det-inner:or-attr-left} $p'=\ceu{\Attr{v}{a}}$.
-      Then~$d_1$ and~$d_2$ are instances of
-      axiom~\eqref{def:orig:inner:or-attr-left}, and as such,
-      $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ and~$\clear$ are total
-      functions, $m_1=m_2=m[v/\eval(a)]$ and~$p_1=p_2=\ceu\clear(p'')$.
+    % \item\label{thm:orig:det-inner:or-attr-left} $p'=\ceu{\Attr{v}{a}}$.
+    %   Then~$d_1$ and~$d_2$ are instances of
+    %   axiom~\eqref{def:orig:inner:or-attr-left}, and as such,
+    %   $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ and~$\clear$ are total
+    %   functions, $m_1=m_2=m[v/\eval(a)]$ and~$p_1=p_2=\ceu\clear(p'')$.
       %%
-    \item $p'\ne\ceu{\Skip,\Attr{v}{a},\Break}$ and~$p''=\ceu{\Attr{v}{a}}$.
-      If~$\blocked(p',\alpha,m)=0$, this case becomes
-      \Cref{thm:orig:det-inner:or-left}.  Otherwise,
-      if~$\blocked(p',\alpha,m)=1$, then~$d_1$ and~$d_2$ are instances of
-      axiom~\eqref{def:orig:inner:or-attr-right}, and as such,
-      $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ and~$\clear$ are total
-      functions, $m_1=m_2=m[v/\eval(a)]$ and~$p_1=p_2=\ceu\clear(p')$.
+    % \item $p'\ne\ceu{\Skip,\Attr{v}{a},\Break}$ and~$p''=\ceu{\Attr{v}{a}}$.
+    %   If~$\blocked(p',\alpha,m)=0$, this case becomes
+    %   \Cref{thm:orig:det-inner:or-left}.  Otherwise,
+    %   if~$\blocked(p',\alpha,m)=1$, then~$d_1$ and~$d_2$ are instances of
+    %   axiom~\eqref{def:orig:inner:or-attr-right}, and as such,
+    %   $\alpha_1=\alpha_2=\alpha$, and as~$\eval$ and~$\clear$ are total
+    %   functions, $m_1=m_2=m[v/\eval(a)]$ and~$p_1=p_2=\ceu\clear(p')$.
       %%
     \item$p'=\ceu\Break$.  Then~$d_1$ and~$d_2$ are instances of
       axiom~\eqref{def:orig:inner:or-break-left}, and as such,
       $\alpha_1=\alpha_2=\alpha$, $m_1=m_2=m$, and as~$\clear$ is a total
       function, $p_1=p_2=\ceu{\clear(p'');\Break}$.
       %%
-    \item $p'\ne\ceu{\Skip,\Attr{v}{a},\Break}$ and~$p''=\ceu\Break$.
+    \item $p'\ne\ceu{\Skip,\Break}$ and~$p''=\ceu\Break$.
       If~$\blocked(p',\alpha,m)=0$, this case becomes
       \Cref{thm:orig:det-inner:or-left}.  Otherwise,
       if~$\blocked(p',\alpha,m)=1$, then~$d_1$ and~$d_2$ are instances of
@@ -226,7 +235,7 @@
       function, $p_1=p_2=\ceu{\clear(p');\Break}$.
       %%
     \item\label{thm:orig:det-inner:or-left}
-      $p',p''\ne\ceu\Skip,\ceu{\Attr{v}{a}},\ceu\Break$.
+      $p',p''\ne\ceu{\Skip,\Break}$.
       If~$\blocked(p',\alpha,m)=0$, $d_1$~and~$d_2$ are instances
       of~\eqref{def:orig:inner:or-left}.  Thus there are derivations~$d_1'$
       and~$d_2'$ such that

@@ -2,20 +2,44 @@
   Relation~$\step{\null}\subseteq\Delta\times\Delta$ is defined inductively
   as follows.
   %%
-  \todo{(1)~Adicionamos o mapa de memória~($m$) à configuração e regras
-    explícitas para atribuição.  A avaliação de expressões aritméticas e
-    booleanas está encapsulada na função~$\eval$.\newline
-    %%
-    (2)~Adicionamos regras para consumir
-    instruções~$\ceu{\protect\Skip}$.\newline
-    %%
-    (3)~Adicionamos condições que garantem que a cada passo apenas uma regra
-    é aplicável---não há escolha.  Outra forma menos verbosa de fazer isso é
-    dizer que elas devem ser avaliadas na ordem em que foram declaradas.
-    Nesse caso, a primeira que for satisfeita deve ser aplicada.  (Não
-    fizemos isso para deixar explícitas as condições de cada regra.)}
+  % \todo{(1)~Adicionamos o mapa de memória~($m$) à configuração e regras
+  %   explícitas para atribuição.  A avaliação de expressões aritméticas e
+  %   booleanas está encapsulada na função~$\eval$.\newline
+  %   %%
+  %   (2)~Adicionamos regras para consumir
+  %   instruções~$\ceu{\protect\Skip}$.\newline
+  %   %%
+  %   (3)~Adicionamos condições que garantem que a cada passo apenas uma regra
+  %   é aplicável---não há escolha.  Outra forma menos verbosa de fazer isso é
+  %   dizer que elas devem ser avaliadas na ordem em que foram declaradas.
+  %   Nesse caso, a primeira que for satisfeita deve ser aplicada.  (Não
+  %   fizemos isso para deixar explícitas as condições de cada regra.)}
 
-  \noindent\emph{Await and emit}
+  \todo{(i) - Como agora atribuição avalia para skip, não precisamos mais tratar
+    atribuição como um caso especial nas regras e, consequentemente, teoremas,
+    certo?\newline
+        (ii) - Ainda não sei se precisamos de uma transição break -> skip.}
+    \noindent\emph{Skip and Attribution}
+    \begin{alignat}{2}
+      \label{def:orig:inner:skip}
+      \<\ceu\Skip,\alpha,m>
+      &\step{n}\<\ceu\Term,\alpha,m>
+      &&
+      \\[1\jot]
+      %%
+      \label{def:orig:inner:attr}
+      \<\ceu{\Attr{v}{a}},\alpha,m>
+      &\step{n}\<\ceu\Skip,\alpha,m[v/\eval(a)]>
+      &&
+      % \\[1\jot]
+      % %%
+      % \label{def:orig:inner:break}
+      % \MARK{\<\ceu\Break,\alpha,m>}
+      % &\MARK{\step{n}\<\ceu\Skip,\alpha,m>}
+      %%
+    \end{alignat}
+
+    \noindent\emph{Await and emit}
     \begin{alignat}{2}
       \label{def:orig:inner:await}
       \<\ceu{\Await(e)},\alpha,m>
@@ -63,11 +87,11 @@
       &&
       \\[1\jot]
       %%
-      \label{def:orig:inner:seq-attr}
-      \<\ceu{\Attr{v}{a}};p,\alpha,m>
-      &\step{n}\<p,\alpha,m'>
-      &&\quad\text{with~$m'=m[v/\eval(a)]$}
-      \\[1\jot]
+      % \label{def:orig:inner:seq-attr}
+      % \<\ceu{\Attr{v}{a}};p,\alpha,m>
+      % &\step{n}\<p,\alpha,m'>
+      % &&\quad\text{with~$m'=m[v/\eval(a)]$}
+      % \\[1\jot]
       %%
       \label{def:orig:inner:seq-break}
       \<\ceu{\Break;p},\alpha,m>
@@ -81,7 +105,7 @@
       \UIC{$\<p_1;p_2,\alpha,m>\step{n}\<p_1';p_2,\alpha',m'>$}
       \DP
       &&\quad\text{\MARK{if~$p_1\ne\ceu{\Skip},
-          \ceu{\Attr{v}{a}},\ceu{\Break}$}}
+          \ceu{\Break}$}}
     \end{alignat}
 
     \noindent\emph{Loops}
@@ -98,11 +122,11 @@
       &&
       \\[1\jot]
       %%
-      \label{def:orig:inner:atloop-attr}
-      \<\ceu{\Attr{v}{a}\Atloop{p}},\alpha,m>
-      &\step{n}\<\ceu{\Loop{p}},\alpha,m'>
-      &&\quad\text{with~$m'=m[v/\eval(a)]$}
-      \\[1\jot]
+      % \label{def:orig:inner:atloop-attr}
+      % \<\ceu{\Attr{v}{a}\Atloop{p}},\alpha,m>
+      % &\step{n}\<\ceu{\Loop{p}},\alpha,m'>
+      % &&\quad\text{with~$m'=m[v/\eval(a)]$}
+      % \\[1\jot]
       %%
       \label{def:orig:inner:atloop-break}
       \<\ceu{\Break\Atloop{p}},\alpha,m>
@@ -117,14 +141,14 @@
         \step{n}\<\ceu{p_1'\Atloop{p_2}},\alpha',m'>$}
       \DP
       &&\quad\parbox{8em}{\MARK{if~$p_1\ne\ceu{\Skip}$,\\
-          \strut\enspace$\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+          \strut\enspace$\ceu{\Break}$}}
     \end{alignat}
 
     \noindent\emph{Par/and}
     %%
-    \todo{Adicionamos a condição de o lado esquerdo estar bloqueado nas
-      regras~\ref{def:orig:inner:and-skip-right}
-      e~\ref{def:orig:inner:and-attr-right}.}
+    % \todo{Adicionamos a condição de o lado esquerdo estar bloqueado nas
+    %   regras~\ref{def:orig:inner:and-skip-right}
+    %   e~\ref{def:orig:inner:and-attr-right}.}
     %%
     \begin{alignat}{2}
       \label{def:orig:inner:and-skip-left}
@@ -139,18 +163,18 @@
       &&\quad\text{\MARK{if~$\blocked(p,\alpha,n)=1$}}
       \\[1\jot]
       %%
-      \label{def:orig:inner:and-attr-left}
-      \<\ceu{\Attr{v}{a}\And{p}},\alpha,m>
-      &\step{n}\<p,\alpha,m'>
-      &&\quad\text{with~$m'=m[v/\eval(a)]$}
-      \\[1\jot]
-      %%
-      \label{def:orig:inner:and-attr-right}
-      \<\ceu{p\And\Attr{v}{a}},\alpha,m>
-      &\step{n}\<p,\alpha,m'>
-      &&\quad\parbox{10em}{\MARK{if~$\blocked(p,\alpha,n)=1$,}\\
-        \strut\enspace with~$m'=m[v/\eval(a)]$}
-      \\[1\jot]
+      % \label{def:orig:inner:and-attr-left}
+      % \<\ceu{\Attr{v}{a}\And{p}},\alpha,m>
+      % &\step{n}\<p,\alpha,m'>
+      % &&\quad\text{with~$m'=m[v/\eval(a)]$}
+      % \\[1\jot]
+      % %%
+      % \label{def:orig:inner:and-attr-right}
+      % \<\ceu{p\And\Attr{v}{a}},\alpha,m>
+      % &\step{n}\<p,\alpha,m'>
+      % &&\quad\parbox{10em}{\MARK{if~$\blocked(p,\alpha,n)=1$,}\\
+      %   \strut\enspace with~$m'=m[v/\eval(a)]$}
+      % \\[1\jot]
       %%
       \label{def:orig:inner:and-break-left}
       \<\ceu{\Break\And\;p},\alpha,m>
@@ -172,8 +196,7 @@
         \<\ceu{p_1'\And{p_2}},\alpha',m'>$}
       \DP
       &&\quad\parbox{10em}{if~$\blocked(p_1,\alpha,n)=0$\\
-        \strut\enspace and~\MARK{$p_1\ne\ceu{\Skip}$,\\
-        \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+        \strut\enspace and~\MARK{$p_1\ne\ceu{\Skip,\Break}$}}
       \\[1\jot]
       %%
       &\hskip-6.9em
@@ -183,8 +206,7 @@
         \<\ceu{p_1\And{p_2'}},\alpha',m'>$}
       \DP
       &&\quad\parbox{10em}{if~$\blocked(p_1,\alpha,n)=1$\\
-        \strut\enspace and~\MARK{$p_2\ne\ceu{\Skip}$,\\
-        \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+        \strut\enspace and~\MARK{$p_2\ne\ceu{\Skip,\Break}$}}
     \end{alignat}
 
     \noindent\emph{Par/or}
@@ -202,20 +224,20 @@
         \strut\enspace with~$p'=\clear(p)$}}
       \\[1\jot]
       %%
-      \label{def:orig:inner:or-attr-left}
-      \<\ceu{\Attr{v}{a}\Or{p}},\alpha,m>
-      &\step{n}\<p',\alpha,m'>
-      &&\quad\parbox{10em}{with~$m'=m[v/\eval(a)]$\\
-        \strut\enspace and~$p'=\clear(p)$}
-      \\[1\jot]
-      %%
-      \label{def:orig:inner:or-attr-right}
-      \<\ceu{p\Or\Attr{v}{a}},\alpha,m>
-      &\step{n}\<p',\alpha,m'>
-      &&\quad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
-        \strut\enspace with~$m'=m[v/\eval(a)]$\\
-        \strut\enspace and~$p'=\clear(p)$}
-      \\[1\jot]
+      % \label{def:orig:inner:or-attr-left}
+      % \<\ceu{\Attr{v}{a}\Or{p}},\alpha,m>
+      % &\step{n}\<p',\alpha,m'>
+      % &&\quad\parbox{10em}{with~$m'=m[v/\eval(a)]$\\
+      %   \strut\enspace and~$p'=\clear(p)$}
+      % \\[1\jot]
+      % %%
+      % \label{def:orig:inner:or-attr-right}
+      % \<\ceu{p\Or\Attr{v}{a}},\alpha,m>
+      % &\step{n}\<p',\alpha,m'>
+      % &&\quad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
+      %   \strut\enspace with~$m'=m[v/\eval(a)]$\\
+      %   \strut\enspace and~$p'=\clear(p)$}
+      % \\[1\jot]
       %%
       \label{def:orig:inner:or-break-left}
       \<\ceu{\Break\Or\;p},\alpha,m>
@@ -237,8 +259,7 @@
         \<\ceu{p_1'\Or{p_2}},\alpha',m'>$}
       \DP
       &&\quad\parbox{10em}{if~$\blocked(p_1,\alpha,n)=0$\\
-        \strut\enspace and~\MARK{$p_1\ne\ceu{\Skip}$,\\
-        \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}\\[1\jot]
+        \strut\enspace and~\MARK{$p_1\ne\ceu{\Skip,\Break}$}}\\
       %%
       &\hskip-6.4em
       \label{def:orig:inner:or-right}
@@ -247,7 +268,6 @@
         \<\ceu{p_1\Or{p_2'}},\alpha',m'>$}
       \DP
       &&\quad\parbox{10em}{if~$\blocked(p_1,\alpha,n)=1$\\
-        \strut\enspace and~\MARK{$p_2\ne\ceu{\Skip}$,\\
-        \strut\enspace $\ceu{\Attr{v}{a}},\ceu{\Break}$}}
+        \strut\enspace and~\MARK{$p_2\ne\ceu{\Skip,\Break}$}}
     \end{alignat}
 \end{definition}

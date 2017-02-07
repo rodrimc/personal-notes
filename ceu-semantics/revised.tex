@@ -316,19 +316,22 @@ program.
 \begin{definition}[label={def:orig:clear}]
   Function $\clear\colon{P}\to{P'}$ is defined inductively as follows.
   %%
-  \todo{Intuitivamente, dado um programa~$p$, a função~$\clear$ concatena em
-    sequência o corpo das \emph{primeiras} ocorrências
-    de~$\ceu{\protect\Fin}$ em cada trilha de~$p$, e retorna a sequência
-    resultante.  A sintaxe do corpo de instruções~$\ceu{\protect\Fin}$ está
-    restrita a programas em~$P'\subseteq{P}$, viz., que não contém
-    instruções~$\ceu{\protect\Await}$, $\ceu{\protect\Awaiting}$,
-    $\ceu{\protect\Emit}$, $\ceu{\protect\Emitting}$, $\ceu{\protect\And}$,
-    $\ceu{\protect\Or}$ e~$\ceu{\protect\Fin}$.  É isso?
-    %%
-    Se sim, por que a chamada recursiva para~\emph{loops} mas não
-    para~\emph{if-else}?}
+  % \todo{Intuitivamente, dado um programa~$p$, a função~$\clear$ concatena em
+  %   sequência o corpo das \emph{primeiras} ocorrências
+  %   de~$\ceu{\protect\Fin}$ em cada trilha de~$p$, e retorna a sequência
+  %   resultante.  A sintaxe do corpo de instruções~$\ceu{\protect\Fin}$ está
+  %   restrita a programas em~$P'\subseteq{P}$, viz., que não contém
+  %   instruções~$\ceu{\protect\Await}$, $\ceu{\protect\Awaiting}$,
+  %   $\ceu{\protect\Emit}$, $\ceu{\protect\Emitting}$, $\ceu{\protect\And}$,
+  %   $\ceu{\protect\Or}$ e~$\ceu{\protect\Fin}$.  É isso?
+  %   %%
+  %   Se sim, por que a chamada recursiva para~\emph{loops} mas não
+  %   para~\emph{if-else}?}
   %%
 \begin{align*}
+    \MARK{\clear(\ceu\Term)}
+    &\MARK{=\ceu\Term}\\
+    %%
     \clear(\ceu\Skip)
     &=\ceu\Skip\\
     %%
@@ -373,21 +376,21 @@ program.
   \end{align*}
 \end{definition}
 
-\todo[inline]{Ainda na definição da~$\clear$, será que não é preciso chamar
-  a função recursivamente também para a segunda metade da sequência?  Do
-  jeito que está
-  \[
-    \clear(\ceu{(\protect\Attr{v}{a};\protect\Fin{p})
-      \protect\And\protect\Skip})
-    =\ceu{\protect\Skip;\protect\Skip}.
-  \]
-  Não deveria ser
-  \[
-    \clear(\ceu{(\protect\Attr{v}{a};\protect\Fin{p})
-      \protect\And\protect\Skip})
-    =\ceu{p;\protect\Skip}?
-  \]
-}
+% \todo[inline]{Ainda na definição da~$\clear$, será que não é preciso chamar
+%   a função recursivamente também para a segunda metade da sequência?  Do
+%   jeito que está
+%   \[
+%     \clear(\ceu{(\protect\Attr{v}{a};\protect\Fin{p})
+%       \protect\And\protect\Skip})
+%     =\ceu{\protect\Skip;\protect\Skip}.
+%   \]
+%   Não deveria ser
+%   \[
+%     \clear(\ceu{(\protect\Attr{v}{a};\protect\Fin{p})
+%       \protect\And\protect\Skip})
+%     =\ceu{p;\protect\Skip}?
+%   \]
+% }
 
 \input{revised-rules}
 
