@@ -414,12 +414,12 @@ The next lemma establishes that given a nontrivial program~$p$ either it is
 possible to advance~$p$ by an inner-step or all its trails are blocked, but
 not both.
 %%
-\FIXME{Faltou incluir~$\ceu{\protect\Fin{p}}$ na lista dos programas
-  triviais, i.e., que não avançam.}
+% \FIXME{Faltou incluir~$\ceu{\protect\Fin{p}}$ na lista dos programas
+%   triviais, i.e., que não avançam.}
 
 \begin{lemma}[label={lem:orig:inner-step-or-blocked}]
   For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
-  if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then either
+  if~$p\ne\ceu{\Break}$\todo{Então não é $\forall p\in{P}$}~then either
   \[
     \exists{\delta\in\Delta}(\<p,\alpha,m>\step{n}\delta)
     \quad\text{or}\quad \blocked(p,\alpha,n)=1,
