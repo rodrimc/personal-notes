@@ -484,7 +484,7 @@ nontrivial programs).
 \begin{theorem}[label={thm:orig:term-outer},
   name={Termination of the outer-step relation}]
   For all~$p\in{P}$, $\alpha\in{E}$, and~$m\in\mathcal{M}$,
-  if~$p\ne\ceu{\Skip},\ceu{\Attr{v}{a}},\ceu{\Break}$ then
+  if~$p\ne\ceu{\Break,\Fin,\Term}$, then
   \[
     \exists{\delta\in\Delta}(\<p,\alpha,m>\ostep{n}\delta).
   \]
