@@ -104,6 +104,7 @@
 \def\<#1>{\langle#1\rangle}
 \def\|#1|{\left|#1\right|}
 \def\blocked{\mathit{blocked}}
+\def\halted{\mathit{halted}}
 \def\clear{\mathit{clear}}
 \def\eval{\mathit{eval}}
 \def\pop{\mathit{pop}}
@@ -538,6 +539,72 @@ statically by the \Ceu\ compiler.
 \begin{proof}
   \TODO{?}
 \end{proof}
+
+The~$\halted$ function is a predicate that determines if a program has finished
+a reaction on a given event stack and reaction number.
+
+\begin{definition}[label={def:orig:halted}]
+  Function~$\halted\colon{P\times{E^*}\times{N}}\to\{0,1\}$ is defined
+  inductively as follows.
+  %%
+  %%
+  \begin{align*}
+    \halted(p,\alpha,n)
+    &=
+      \begin{cases}
+        \halted(p,\epsilon,n) &\text{if~$\alpha=\epsilon$}\\
+        0 &\text{otherwise}
+      \end{cases}\\
+    %%
+    \halted(\ceu\Term,\epsilon,n)
+    &=1\\
+    \halted(\ceu{\Skip},\epsilon,n)
+    &=0\\
+    %%
+    \halted(\ceu{\Attr{v}{a}},\epsilon,n)
+    &=0\\
+    %%
+    \halted(\ceu{\Await(e)},\epsilon,n)
+    &=0\\
+    %%
+    \halted(\ceu{\Emit(e)},\epsilon,n)
+    &=0\\
+    %%
+    \halted(\ceu{\Break},\epsilon,n)
+    &=0\\
+    %%
+    \halted(\ceu{\Ifelse{b}{p_1}{p_2}},\epsilon,n)
+    &=0\\
+    %%
+    \halted(\ceu{p_1;p_2},\epsilon,n)
+    &=\halted(p_1,\epsilon,n)\\
+    %%
+    \halted(\ceu{\Loop p},\epsilon,n)
+    &=0\\
+    %%
+    \halted(\ceu{p_1\And p_2},\epsilon,n)
+    &=\halted(p_1,\epsilon,n)\cdot\halted(p_2,\epsilon,n)\\
+    %%
+    \halted(\ceu{p_1\Or p_2},\epsilon,n)
+    &=\halted(p_1,\epsilon,n)\cdot\halted(p_2,\epsilon,n)\\
+    %%
+    \halted(\ceu{\Fin p_1},\epsilon,n)
+    &=1\\
+    % %%
+    \halted(\ceu{\Awaiting(e',n')},\epsilon,n)
+    &=
+      \begin{cases}
+        1 &\text{if~$n'>n$}\\
+        0 &\text{otherwise}
+      \end{cases}\\
+    %%
+    \halted(\ceu{\Emitting(n')},\epsilon,n)
+    &=0\\
+    %%
+    \halted(\ceu{p_1\Atloop p_2},\epsilon,n)
+    &=\halted(p_1,\epsilon,n)
+  \end{align*}
+\end{definition}
 
 \begin{theorem}[label={thm:orig:term-react},
   name={Termination of the reaction relation}]
