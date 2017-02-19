@@ -951,8 +951,8 @@ The next theorem establishes that, for any initial configuration, an
   possible, depending on the structure of~$p$.
   \begin{case}
   \item$p=\ceu{\Attr{v}{a}}$.  Derivations~$d_1$ and~$d_2$ are instances of
-    rule~\eqref{def:sem:inner:attr}.  Thus~$p_1=p_2=p$,
-    $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+    rule~\eqref{def:sem:inner:attr}.  Thus~$p_1=p_2=\ceu\Skip$,
+    $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m[v/\eval(a)]$.
     %%
   \item$p=\ceu{\Await(e)}$.  Derivations~$d_1$ and~$d_2$ are instances of
     rule~\eqref{def:sem:inner:await}.  Thus~$p_1=p_2=\ceu{\Awaiting(e,n')}$
