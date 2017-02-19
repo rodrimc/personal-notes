@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper,oneside,leqno]{article}
+\documentclass[10pt,a4paper,oneside,leqno]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
@@ -303,9 +303,14 @@ that determines if all trails of a program~$p$ are blocked on a given event
 stack and reaction number.  And the~$\clear$ function extracts the body of
 active~$\ceu{\Fin}$ blocks from a given program.
 
+In the following definitions, expressions of the form~$\|\alpha|$ denote the
+length of event stack~$\alpha$ and the operator~$\cdot$ denotates the
+multiplication operation in ${N}$.
+
 \begin{definition}[label={def:sem:blocked}]
   Function~$\blocked\colon{P\times{E^*}\times{N}}\to\{0,1\}$ is defined
   inductively as follows.
+
   \begin{align*}
     \blocked(\ceu{\Skip},\alpha,n)
     &=0\\
@@ -406,9 +411,7 @@ active~$\ceu{\Fin}$ blocks from a given program.
   \end{align*}
 \end{definition}
 
-The reaction inner-step relation is defined next.  In the definition,
-expressions of the form~$\|\alpha|$ denote the length of event
-stack~$\alpha$.
+The reaction inner-step relation is defined next.
 
 \begin{definition}[label={def:sem:inner},name={Reaction inner-step}]
   Relation~$\innersym\subseteq\Delta\times\Delta$ is defined inductively as
