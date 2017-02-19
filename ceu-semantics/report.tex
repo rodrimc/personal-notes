@@ -1478,12 +1478,20 @@ The next theorem establishes that, for any initial configuration, an
     $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
     Therefore~$\delta=\<\ceu{\Awaiting(e,n')},\alpha,m>$.
     %%
-  \item$p=\ceu{\Awaiting(e,n')}$.  By
-    rule~\eqref{def:sem:inner:awaiting},
+  \item$p=\ceu{\Awaiting(e,n')}$. Consider $\alpha_{[1]}$ as the top of
+    stack~$\alpha$.
+    \begin{case}
+    \item$e\ne a_{[1]}$.  By~\Cref{def:sem:blocked},
+    $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
+    \item$n'>n$.  By~\Cref{def:sem:blocked},
+    $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
+
+    \item$e=a_{[1]}$ and $n'\leq n$.  By rule~\eqref{def:sem:inner:awaiting},
     \[
       \<\ceu{\Awaiting(e,n')},\alpha,m>
       \inner[1]{n}\<\ceu{\Skip},\alpha,m>=\delta.
     \]
+    \end{case}
     %%
   \item$p=\ceu{\Emit(e)}$.  By rule~\eqref{def:sem:inner:emit},
     \[
