@@ -1,0 +1,2031 @@
+\documentclass[11pt,a4paper,oneside,leqno]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage[protrusion=true,expansion]{microtype}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=black}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage[varg]{txfonts}
+\usepackage{mathtools}
+\usepackage[nameinlink]{cleveref}
+
+
+% Theorems.
+\numberwithin{equation}{section}
+\usepackage{thmtools}
+\declaretheorem[
+  name=Theorem,
+  refname={theorem,theorems},
+  Refname={Theorem,Theorems},
+  numberwithin=section,
+  style=plain,
+  ]{theorem}
+\declaretheorem[
+  name=Lemma,
+  refname={lemma,lemmas},
+  Refname={Lemma,Lemmas},
+  sharenumber=theorem,
+  style=plain,
+  ]{lemma}
+\declaretheorem[
+  name=Proposition,
+  refname={proposition,propositions},
+  refname={Proposition,Propositions},
+  sharenumber=theorem,
+  style=plain,
+  ]{proposition}
+\declaretheorem[
+  name=Definition,
+  refname={definition,definitions},
+  Refname={Definition,Definitions},
+  sharenumber=theorem,
+  style=definition,
+  ]{definition}
+\declaretheorem[
+  name=Assumption,
+  refname={assumption,assumptions},
+  Refname={Assumption,Assumptions},
+  sharenumber=theorem,
+  style=definition,
+  ]{assumption}
+\declaretheorem[
+  name=Notation,
+  refname={notation,notations},
+  Refname={Notation,Notations},
+  numbered=no,
+  style=remark,
+  ]{notation}
+\declaretheorem[
+  name=Example,
+  refname={example,examples},
+  Refname={Example,Examples},
+  numbered=no,
+  style=remark,
+  ]{example}
+
+
+% Proof trees.
+\usepackage{bussproofs}
+\def\labelSpacing{0em}
+\def\ScoreOverhang{0em}
+\def\defaultHypSeparation{\enspace}
+\EnableBpAbbreviations
+
+
+% Proof cases.
+\usepackage{enumitem}
+\def\Case#1{[{\footnotesize\textsc{Case~#1}}]}
+\setlist{noitemsep}
+\setlist[enumerate]{label=(\roman*)}
+\newlist{case}{enumerate}{3}
+\setlist[case]{itemsep=\topsep}
+\setlist[case,1]{
+  label=\Case{\arabic{casei}},
+  ref=\arabic{casei},
+  leftmargin=0pt,itemindent=*}
+\setlist[case,2]{
+  label=\Case{\arabic{casei}.\arabic{caseii}},
+  ref=\arabic{casei}.\arabic{caseii},
+  leftmargin=\parindent,itemindent=*,labelindent=\parindent}
+\setlist[case,3]{
+  label=\Case{\arabic{casei}.\arabic{caseii}.\arabic{caseiii}},
+  ref=\arabic{casei}.\arabic{caseii}.\arabic{caseiii},
+  leftmargin=\parindent,itemindent=*,labelindent=\parindent}
+\crefname{casei}{case}{cases}
+\Crefname{casei}{Case}{Cases}
+\crefname{caseii}{case}{cases}
+\Crefname{caseii}{Case}{Cases}
+\crefname{caseiii}{case}{cases}
+\Crefname{caseiii}{Case}{Cases}
+
+
+% Symbols.
+\def\Ceu{C\'eu}
+\let\nil=\varepsilon
+\def\<#1>{\langle#1\rangle}
+\def\|#1|{\left|#1\right|}
+\def\M{\mathcal{M}}
+\def\blocked{\mathit{blocked}}
+\def\clear{\mathit{clear}}
+\def\eval{\mathit{eval}}
+\def\Hinner{{\#_{\mathrm{in}}}}
+\newcommand\Rinner[1][]{{\mathcal{R}_{\mathrm{in}}^{#1}}}
+\def\pop{\mathit{pop}}
+\def\Houter{{\#_{\mathrm{out}}}}
+
+% Inner-step relation.
+\makeatletter
+\def\@inner#1#2{%
+  \setbox0=\hbox{$\vdash$}%
+  \setbox1=\hbox{$\scriptscriptstyle#1$}%
+  \setbox2=\hbox{$\scriptscriptstyle#2$}%
+  \ifdim\wd1>\wd2
+    \setbox2=\hbox to\wd1{\hfil$\scriptscriptstyle#2$\hfil}%
+  \else
+    \setbox1=\hbox to\wd2{\hfil$\scriptscriptstyle#1$\hfil}%
+  \fi
+  \setbox3=\hbox{$\null^{\box1}_{\box2}$}%
+  \dimen0=\wd3
+  \rlap{\hbox{$\vrule height\the\ht0 depth\the\dp0 width.6pt
+      \vcenter{\hrule height.3pt depth.3pt width\dimen0}$}}%
+  \kern1pt\box3
+}
+\newcommand{\inner}[2][]{\mathbin{\@inner{#2}{#1}}}
+\newcommand{\innerbin}{\mathbin{\@inner{\hskip.6ex}{}}}
+\newcommand{\innersym}{\mathord{\@inner{\hskip.6ex}{}}}
+\newcommand{\innerx}[1]{\inner[\ast]{#1}}
+\newcommand{\innerxsym}{\mathord{\@inner{\hskip.6ex}{\ast}}}
+\makeatother
+
+% Outer-step relation.
+\makeatletter
+\def\@outer#1#2{%
+  \setbox0=\hbox{$\to$}%
+  \setbox1=\hbox{$\scriptscriptstyle#1$}%
+  \setbox2=\hbox{$\scriptscriptstyle#2$}%
+  \ifdim\wd1>\wd2
+    \setbox2=\hbox to\wd1{\hfil$\scriptscriptstyle#2$\hfil}%
+  \else
+    \setbox1=\hbox to\wd2{\hfil$\scriptscriptstyle#1$\hfil}%
+  \fi
+  \setbox3=\hbox{$\null^{\box1}_{\box2}$}%
+  \dimen0=\wd0
+  \dimen1=\dimexpr(\wd0-\wd3)/2-.8pt
+  \rlap{\box0}\rlap{\kern\dimen1\box3}\hskip\dimen0
+}
+\newcommand{\outeri}[2][]{\mathbin{\@outer{#2}{#1}}}
+\let\outerbin=\to
+\newcommand{\outersym}{\mathord{\to}}
+\newcommand{\outerx}[1]{\outeri[+]{#1}}
+\newcommand{\outerxsym}{\outeri[+]{}}
+\makeatother
+
+% Aligned unary inference rules.
+\newbox\alignrulebox
+\setbox\alignrulebox=\hbox{}
+\def\alignrule#1#2{%
+  \setbox0=\hbox{#1}%
+  \setbox\alignrulebox=\hbox{#2}%
+  \rlap{\hskip-\dimexpr\wd\alignrulebox/2-\wd0-1.45pt#2}}
+\def\alignruleinner#1{\alignrule{$\strut\inner{n}\strut$}{#1}}
+
+% Céu instructions.
+\makeatletter
+\def\@ceuop#1{\mathop{\texttt{#1}}}%
+\def\@ceubin#1{\mathbin{\texttt{#1}}}%
+\def\ceu{\protect\@ceu}
+\def\@ceu#1{%
+  \bgroup
+  \def\Skip{\@ceuop{skip}}%
+  \def\Mem{\@ceuop{mem}}%
+  \def\Attr##1##2{##1\coloneqq##2}%
+  \def\Await{\@ceuop{await}}%
+  \def\Emit{\@ceuop{emit}}%
+  \def\Break{\@ceuop{break}}%
+  \def\Ifelse##1##2##3{\@ceuop{if}##1\@ceuop{then}{##2}\@ceuop{else}{##3}}%
+  \def\Loop{\@ceuop{loop}}%
+  \def\And{\@ceubin{and}}%
+  \def\Or{\@ceubin{or}}%
+  \def\Fin{\@ceuop{fin}}%
+  \def\Awaiting{\@ceuop{@awaiting}}%
+  \def\Emitting{\@ceuop{@emitting}}%
+  \def\Atloop{\@ceuop{@loop}}%
+  \ensuremath{#1}\ignorespaces
+  \egroup
+}
+\makeatother
+
+
+\title{A deterministic and terminating semantics for\\
+  the synchronous language~\Ceu}
+\author{Rodrigo Costa \and Guilherme F.~Lima \and Francisco Sant'Anna}
+\begin{document}
+\maketitle
+
+
+\section{Introduction}
+\label{sec:intro}
+
+
+\section{Formal semantics}
+\label{sec:sem}
+
+
+\subsection{Abstract syntax}
+\label{sub:sem:syntax}
+
+The \emph{abstract syntax} of \Ceu\ programs is given by the following
+grammar:
+\bgroup
+\vskip\abovedisplayskip
+\noindent
+\hfil\hbox{%
+  \vtop{%
+    \tabskip0pt
+    \offinterlineskip
+    \halign{\strut\hfil$#$&$\;#$\hfil&\qquad#\hfil\cr
+      p\in{P}\Coloneqq
+          & \ceu{\Skip}                 & do nothing\cr
+      \mid& \ceu{\Attr{v}{a}}           & set variable\cr
+      \mid& \ceu{\Break}                & break loop or trail\cr
+      \mid& \ceu{\Await(e)}             & await event\cr
+      \mid& \ceu{\Emit(e)}              & emit event\cr
+      \mid& \ceu{\Ifelse{b}{p_1}{p_2}}  & conditional\cr
+      \mid& \ceu{p_1;p_2}               & sequence\cr
+      \mid& \ceu{\Loop p_1}             & repetition\cr
+      \mid& \ceu{p_1\And p_2}           & par/and\cr
+      \mid& \ceu{p_1\Or p_2}            & par/or\cr
+      \mid& \ceu{\Fin p^\star}          & finalization\cr
+      \mid& \ceu{\Awaiting(e,n)}        & unwinded await\cr
+      \mid& \ceu{\Emitting(e,n)}        & unwinded emit\cr
+      \mid& \ceu{p_1\Atloop p_2}        & unwinded loop\cr
+    }%
+  }%
+}\hfil%
+\vskip\belowdisplayskip
+\egroup
+%%
+\noindent
+where~$n\in{N}$ is an integer, $v\in{V}$~is a memory location (variable)
+identifier, $e\in{E}$~is an event identifier, $a\in{A}$~is an arithmetic
+expression, $b\in{B}$ is a boolean expression, and~$p$, $p_1$, $p_2\in{P}$
+are programs.  We assume the usual structure for arithmetic and boolean
+expressions and omit their definition.
+
+We further assume that:
+\begin{enumerate}
+\item the body of~$\ceu{\Fin}$ blocks, viz., $p^\star\in{P^\star}$, contains
+  only instructions of the form~$\ceu{\Skip}$, $\ceu{\Attr{v}{a}}$,
+  $\ceu{\Ifelse{b}{p_1^\star}{p_2^\star}}$ and~$\ceu{p_1^\star;p_2^\star}$;
+\item the instructions~$\ceu{\Awaiting(e,n)}$, $\ceu{\Emitting(e,n)}$,
+  and~$\ceu{p_1\Atloop{p_2}}$ do not appear in user programs (these are
+  internal instructions that result from the expansion of awaits, emits, and
+  loops); and that
+\item every execution path within the body of a loop instruction
+  ($\ceu{\Loop{p}}$) contains an occurrence of~$\ceu{\Break}$
+  or~$\ceu{\Await(e)}$.
+\end{enumerate}
+
+
+\subsection{The inner reaction}
+\label{sub:sem:inner}
+
+The \emph{state} of a \Ceu\ program within a reaction consists of a stack of
+events~$\alpha=e_1e_2\dots{e_n}\in{E}^*$ together with a memory
+map~$m\colon{v}\to{N}\in\M$.  A \emph{configuration} is
+a~4-tuple~$\<p,\alpha,m,n>\in\Delta$ that represents the situation of
+program~$p$ waiting to be evaluated in state~$\<\alpha,m>$ and reaction
+number~$n$.  Given an initial configuration, each inner-step within a
+program reaction is determined by the \emph{reaction-inner-step}
+relation~$\innersym\in\Delta\times\Delta$ such that
+\[
+  \<p,\alpha,m,n>\innerbin\<p',\alpha',m',n>
+\]
+iff a reaction inner-step of program~$p$ in state~$\<\alpha,m>$ and reaction
+number~$n$ yields a modified program~$p'$ and a modified
+state~$\<\alpha',m'>$ in the same reaction~($n$).  Since
+relation~$\innersym$ can only relate configurations with the same~$n$, we
+write
+\[
+  \<p,\alpha,m>\inner{n}\<p',\alpha',m'>
+  \equiv\<p,\alpha,m,n>\innerbin\<p',\alpha',m',n>.
+\]
+
+Before defining the inner-step relation, we need to define the auxiliary
+functions~$\eval$, $\blocked$, and~$\clear$.  The~$\eval$ function evaluates
+arithmetic or boolean expressions on a given memory.  For the sake of
+simplicity, we omit its formal definition and assume that such evaluation is
+deterministic and always terminates.  The~$\blocked$ function is a predicate
+that determines if all trails of a program~$p$ are blocked on a given event
+stack and reaction number.  And the~$\clear$ function extracts the body of
+active~$\ceu{\Fin}$ blocks from a given program.
+
+\begin{definition}[label={def:sem:blocked}]
+  Function~$\blocked\colon{P\times{E^*}\times{N}}\to\{0,1\}$ is defined
+  inductively as follows.
+  \begin{align*}
+    \blocked(\ceu{\Skip},\alpha,n)
+    &=0\\
+    %%
+    \blocked(\ceu{\Attr{v}{a}},\alpha,n)
+    &=0\\
+    %%
+    \blocked(\ceu{\Break},\alpha,n)
+    &=0\\
+    %%
+    \blocked(\ceu{\Await(e)},\alpha,n)
+    &=0\\
+    %%
+    \blocked(\ceu{\Emit(e)},\alpha,n)
+    &=0\\
+    %%
+    \blocked(\ceu{\Ifelse{b}{p_1}{p_2}},\alpha,n)
+    &=0\\
+    %%
+    \blocked(\ceu{p_1;p_2},\alpha,n)
+    &=\blocked(p_1,\alpha,n)\\
+    %%
+    \blocked(\ceu{\Loop p},\alpha,n)
+    &=0\\
+    %%
+    \blocked(\ceu{p_1\And p_2},\alpha,n)
+    &=\blocked(p_1,\alpha,n)\cdot\blocked(p_2,\alpha,n)\\
+    %%
+    \blocked(\ceu{p_1\Or p_2},\alpha,n)
+    &=\blocked(p_1,\alpha,n)\cdot\blocked(p_2,\alpha,n)\\
+    %%
+    \blocked(\ceu{\Fin p_1},\alpha,n)
+    &=1\\
+    %%
+    \blocked(\ceu{\Awaiting(e',n')},e\alpha,n)
+    &=
+      \begin{cases}
+        1 &\text{if~$e\ne{e'}$ or~$n'>n$}\\
+        0 &\text{otherwise}
+      \end{cases}\\
+      %%
+    \blocked(\ceu{\Emitting(n')},\alpha,n)
+    &=
+      \begin{cases}
+        1 &\text{if~}\|\alpha|\ne{n'}\\
+        0 &\text{otherwise}
+      \end{cases}\\
+      %%
+    \blocked(\ceu{p_1\Atloop p_2},\alpha,n)
+    &=\blocked(p_1,\alpha,n)
+  \end{align*}
+\end{definition}
+
+\begin{definition}[label={def:sem:clear}]
+  Function $\clear\colon{P}\to{P^\star}$ is defined inductively as follows.
+  \begin{align*}
+    \clear(\ceu\Skip)
+    &=\ceu\Skip\\
+    %%
+    \clear(\ceu{\Attr{v}{a}})
+    &=\ceu{\Skip}\\
+    %%
+    \clear(\ceu{\Break})
+    &=\ceu{\Skip}\\
+    %%
+    \clear(\ceu{\Await(e)})
+    &=\ceu{\Skip}\\
+    %%
+    \clear(\ceu{\Emit(e)})
+    &=\ceu{\Skip}\\
+    %%
+    \clear(\ceu{\Ifelse{b}{p_1}{p_2}})
+    &=\ceu{\Skip}\\
+    %%
+    \clear(\ceu{p_1;p_2})
+    &=\clear(p_1)\\
+    %%
+    \clear(\ceu{\Loop p})
+    &=\ceu{\Skip}\\
+    %%
+    \clear(\ceu{p_1\And p_2})
+    &=\clear(p_1);\clear(p_2)\\
+    %%
+    \clear(\ceu{p_1\Or p_2})
+    &=\clear(p_1);\clear(p_2)\\
+    %%
+    \clear(\ceu{\Fin p})
+    &=p\\
+    % %%
+    \clear(\ceu{\Awaiting(e,n)})
+    &=\ceu{\Skip}\\
+    %%
+    \clear(\ceu{\Emitting(n)})
+    &=\ceu{\Skip}\\
+    %%
+    \clear(\ceu{p_1\Atloop p_2})
+    &=\clear(p_1)
+  \end{align*}
+\end{definition}
+
+The reaction inner-step relation is defined next.  In the definition,
+expressions of the form~$\|\alpha|$ denote the length of event
+stack~$\alpha$.
+
+\begin{definition}[label={def:sem:inner},name={Reaction inner-step}]
+  Relation~$\innersym\subseteq\Delta\times\Delta$ is defined inductively as
+  follows.
+
+  \noindent\emph{Attribution}
+  \begin{align}
+    \label{def:sem:inner:attr}
+    \<\ceu{\Attr{v}{a}},\alpha,m>
+    &\inner{n}\<\ceu\Skip,\alpha,m[v/\eval(a)]>
+  \end{align}
+
+  \noindent\emph{Await and emit}
+  \begin{alignat}{2}
+    \label{def:sem:inner:await}
+    \<\ceu{\Await(e)},\alpha,m>
+    &\inner{n}\<\ceu{\Awaiting(e,n')},\alpha,m>
+    &&\qquad\text{with~$n'=n+1$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:awaiting}
+    \<\ceu{\Awaiting(e,n')},e\alpha,m>
+    &\inner{n}\<\ceu{\Skip},e\alpha,m>
+    &&\qquad\text{if~$n'\le{n}$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:emit}
+    \<\ceu{\Emit(e)},\alpha,m>
+    &\inner{n}\<\ceu{\Emitting(n')},e\alpha,m>
+    &&\qquad\text{with~$n'=\|\alpha|$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:emitting}
+    \<\ceu{\Emitting(n')},\alpha,m>
+    &\inner{n}\<\ceu{\Skip},\alpha,m>
+    &&\qquad\text{if~$n'=\|\alpha|$}
+  \end{alignat}
+
+  \noindent\emph{Conditionals}
+  \begin{alignat}{2}
+    \label{def:sem:inner:if-true}
+    \<\ceu{\Ifelse{b}{p_1}{p_2}},\alpha,m>
+    &\inner{n}\<p_1,\alpha,m>
+    &&\qquad\text{if~$\eval(b,m)=1$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:if-false}
+    \<\ceu{\Ifelse{b}{p_1}{p_2}},\alpha,m>
+    &\inner{n}\<p_2,\alpha,m>
+    &&\qquad\text{if~$\eval(b,m)=0$}
+  \end{alignat}
+
+  \noindent\emph{Sequences}
+  \begin{alignat}{2}
+    \label{def:sem:inner:seq-skip}
+    \<\ceu\Skip;p,\alpha,m>
+    &\inner{n}\<p,\alpha,m>
+    &&
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:seq-break}
+    \<\ceu{\Break;p},\alpha,m>
+    &\inner{n}\<\ceu{\Break},\alpha,m>
+    &&
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:seq}
+    \alignruleinner{%
+      \AXC{$\<p_1,\alpha,m>\inner{n}\<p_1',\alpha',m'>$}
+      \UIC{$\<p_1;p_2,\alpha,m>\inner{n}\<p_1';p_2,\alpha',m'>$}
+      \DP}
+    &&&
+  \end{alignat}
+
+  \noindent\emph{Loops}
+  \begin{alignat}{2}
+    \label{def:sem:inner:loop}
+    \<\ceu{\Loop p},\alpha,m>
+    &\inner{n}\<\ceu{p\Atloop{p}},\alpha,m>
+    &&
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:atloop-skip}
+    \<\ceu{\Skip\Atloop{p}},\alpha,m>
+    &\inner{n}\<\ceu{\Loop{p}},\alpha,m>
+    &&
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:atloop-break}
+    \<\ceu{\Break\Atloop{p}},\alpha,m>
+    &\inner{n}\<\ceu{\Skip},\alpha,m>
+    &&
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:atloop}
+    \alignruleinner{%
+      \AXC{$\<p_1,\alpha,m>\inner{n}\<p_1',\alpha',m'>$}
+      \UIC{$\<\ceu{p_1\Atloop{p_2}},\alpha,m>
+        \inner{n}\<\ceu{p_1'\Atloop{p_2}},\alpha',m'>$}
+      \DP}
+    &&&
+  \end{alignat}
+
+  \noindent\emph{Par/and}
+  \begin{alignat}{2}
+    \label{def:sem:inner:and-skip-left}
+    \<\ceu{\Skip\And{\;p}},\alpha,m>
+    &\inner{n}\<p,\alpha,m>
+    &&
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:and-skip-right}
+    \<\ceu{p\And\Skip},\alpha,m>
+    &\inner{n}\<p,\alpha,m>
+    &&\qquad\text{if~$\blocked(p,\alpha,n)=1$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:and-break-left}
+    \<\ceu{\Break\And\,p},\alpha,m>
+    &\inner{n}\<\ceu{p';\Break},\alpha,m>
+    &&\qquad\text{with~$p'=\clear(p)$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:and-break-right}\quad
+    \<\ceu{p\And\Break},\alpha,m>
+    &\inner{n}\<\ceu{p';\Break},\alpha,m>
+    &&\qquad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
+      \strut\enspace with~$p'=\clear(p)$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:and-left}
+    \alignruleinner{%
+      \AXC{$\<p_1,\alpha,m>\inner{n}\<p_1',\alpha',m'>$}
+      \UIC{$\<\ceu{p_1\And{p_2}},\alpha,m>\inner{n}
+        \<\ceu{p_1'\And{p_2}},\alpha',m'>$}
+      \DP}%
+    &&&\qquad\text{if~$\blocked(p_1,\alpha,n)=0$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:and-right}
+    \alignruleinner{%
+      \AXC{$\<p_2,\alpha,m>\inner{n}\<p_2',\alpha',m'>$}
+      \UIC{$\<\ceu{p_1\And{p_2}},\alpha,m>\inner{n}
+        \<\ceu{p_1\And{p_2'}},\alpha',m'>$}
+      \DP}
+    &&&\qquad\text{if~$\blocked(p_1,\alpha,n)=1$}
+  \end{alignat}
+
+  \noindent\emph{Par/or}
+  \begin{alignat}{2}
+    \label{def:sem:inner:or-skip-left}
+    \<\ceu{\Skip\Or{\;p}},\alpha,m>
+    &\inner{n}\<p',\alpha,m>
+    &&\qquad\text{with~$p'=\clear(p)$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:or-skip-right}
+    \<\ceu{p\Or\Skip},\alpha,m>
+    &\inner{n}\<p',\alpha,m>
+    &&\qquad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
+      \strut\enspace with~$p'=\clear(p)$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:or-break-left}
+    \<\ceu{\Break\Or\,p},\alpha,m>
+    &\inner{n}\<\ceu{p';\Break},\alpha,m>
+    &&\qquad\text{with~$p'=\clear(p)$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:or-break-right}\quad
+    \<\ceu{p\Or\Break},\alpha,m>
+    &\inner{n}\<\ceu{p';\Break},\alpha,m>
+    &&\qquad\parbox{10em}{if~$\blocked(p,\alpha,n)=1$,\\
+      \strut\enspace with~$p'=\clear(p)$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:or-left}
+    \alignruleinner{%
+      \AXC{$\<p_1,\alpha,m>\inner{n}\<p_1',\alpha',m'>$}
+      \UIC{$\<\ceu{p_1\Or{p_2}},\alpha,m>\inner{n}
+        \<\ceu{p_1'\Or{p_2}},\alpha',m'>$}
+      \DP}
+    &&&\qquad\text{if~$\blocked(p_1,\alpha,n)=0$}
+    \\[1\jot]
+    %%
+    \label{def:sem:inner:or-right}
+    \alignruleinner{%
+      \AXC{$\<p_2,\alpha,m>\inner{n}\<p_2',\alpha',m'>$}
+      \UIC{$\<\ceu{p_1\Or{p_2}},\alpha,m>\inner{n}
+        \<\ceu{p_1\Or{p_2'}},\alpha',m'>$}
+      \DP}
+    &&&\qquad\text{if~$\blocked(p_1,\alpha,n)=1$}
+  \end{alignat}
+\end{definition}
+
+The next lemma establishes that the reaction inner-step relation is
+deterministic, i.e., that it is in fact a \emph{partial} function.
+
+\begin{restatable}[label={lem:sem:inner:det},
+name={Determinism of the inner-step relation}]{lemma}{lemseminnerdet}
+For all~$p$, $p_1$, $p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$,
+$m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$,
+if~$\<p,\alpha,m>\inner{n}\<p_1,\alpha_1,m_1>$
+and~$\<p,\alpha,m>\inner{n}\<p_2,\alpha_2,m_2>$,
+then~$\<p_1,\alpha_1,m_1>=\<p_2,\alpha_2,m_2>$.
+\end{restatable}
+\begin{proof}
+  By induction on the structure of derivations.  See
+  page~\pageref{proof:lem:sem:inner:det}.
+\end{proof}
+
+The inner-step relation ($\innersym$) embodies the ``yields in one inner
+step'' relationship between a non-blocked and a possibly blocked
+configuration.  Once we defined relation~$\innersym$, we can define the
+\emph{reaction inner-multi-step} relation, which embodies the relationship
+``yields in some finite number of inner steps'' (in symbols~$\innerxsym$),
+as its reflexive-transitive closure.
+
+\begin{definition}[label={def:sem:innerx},
+  name={Reaction inner-$i$-step and inner-multi-step}]
+  For all~$\delta,\delta'\in\Delta$,
+  \begin{align*}
+    \delta\inner[0]{n}\delta'
+    &\quad\text{iff}\quad
+    \delta=\delta'\\
+    %%
+    \delta\inner[1]{}\delta'
+    &\quad\text{iff}\quad
+    \delta\innerbin\delta'\\
+    %%
+    \delta\inner[i]{n}\delta'
+    &\quad\text{iff}\quad
+    \exists{\delta''\in\Delta}
+      (\delta\innerbin\delta''
+      \enspace\text{and}\enspace
+      \delta''\inner[i-1]{}\delta')\qquad\text{(for all~$i>1$)}\\
+    %%
+    \delta\innerx{}\delta'
+    &\quad\text{iff}\quad
+    \exists{i}(\delta\inner[i]{}\delta').
+  \end{align*}
+\end{definition}
+
+As established by the next theorem, the determinism of~$\innersym$ is
+transmitted to~$\inner[i]{}$.
+
+\begin{restatable}[label={thm:sem:inneri:det},
+  name={Determinism of the inner-$i$-step relation}]{theorem}
+  {thmseminneridet}
+  %%
+  Let~$p$, $p_1$, $p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$,
+  $m$, $m_1$, $m_2\in\mathcal{M}$, and~$n\in{N}$.  For all~$i\ge{0}$,
+  if~$\<p,\alpha,m>\inner[i]{n}\<p_1,\alpha_1,m_1>$
+  and~$\<p,\alpha,m>\inner[i]{n}\<p_2,\alpha_2,m_2>$,
+  then~$\<p_1,\alpha_1,m_1>=\<p_2,\alpha_2,m_2>$.
+\end{restatable}
+\begin{proof}
+  By induction on~$i$.  See page~\pageref{proof:thm:sem:inneri:det}.
+\end{proof}
+
+The next lemmas establish some important properties of
+relations~$\inner[i]{}$ and~$\innerx{}$.  Note that for
+\Cref{lem:sem:inneri:behave} to work it is necessary that
+relation~$\innersym$ is undefined for configurations whose program consists
+of a single~$\ceu{\Skip}$ or~$\ceu{\Break}$ instruction.
+
+\begin{restatable}[label={lem:sem:inneri:behave}]{lemma}{lemseminneribehave}
+  Let~$p_1$, $p_1'$, $p_2\in{P}$, $\alpha$, $\alpha'\in{E^*}$, $m$,
+  $m'\in\mathcal{M}$, $n\in{N}$, and~$i\ge0$.
+  If~$\<p_1,\alpha,m>\inner[i]{n}\<p_1',\alpha',m'>$, then
+  \begin{enumerate}
+  \item\label{lem:sem:inneri:behave:seq}
+    $\<p_1;p_2,\alpha,m>
+    \inner[i]{n}\<p_1';p_2,\alpha',m'>$;
+    %%
+  \item\label{lem:sem:inneri:behave:atloop}
+    $\<\ceu{p_1\Atloop{p_2}},\alpha,m>
+    \inner[i]{n}\<\ceu{p_1'\Atloop{p_2}},\alpha',m'>$;
+    %%
+  \item\label{lem:sem:inneri:behave:and-left}
+    $\<\ceu{p_1\And\,p_2},\alpha,m>
+    \inner[i]{n}\<\ceu{p_1'\And\,p_2},\alpha',m'>$;
+    %%
+  \item\label{lem:sem:inneri:behave:or-left}
+    $\<\ceu{p_1\Or\,p_2},\alpha,m>
+    \inner[i]{n}\<\ceu{p_1'\Or\,p_2},\alpha',m'>$.
+  \end{enumerate}
+  If~$\blocked(p_1,\alpha,n)=1$
+  and~$\<p_2,\alpha,m>\inner[i]{n}\<p_2',\alpha',m'>$, then
+  \begin{enumerate}
+    \setcounter{enumi}{4}
+  \item\label{lem:sem:inneri:behave:and-right}
+    $\<\ceu{p_1\And\,p_2},\alpha,m>
+    \inner[i]{n}\<\ceu{p_1\And\,p_2'},\alpha',m'>$;
+    %%
+  \item\label{lem:sem:inneri:behave:or-right}
+    $\<\ceu{p_1\Or\,p_2},\alpha,m>
+    \inner[i]{n}\<\ceu{p_1\Or\,p_2'},\alpha',m'>$.
+  \end{enumerate}
+\end{restatable}
+\begin{proof}
+  By induction on~$i$.  See page~\pageref{proof:lem:sem:inneri:behave}.
+\end{proof}
+
+\begin{restatable}[label=lem:sem:inneri:behave-pstar]{lemma}
+  {lemseminneribehavepstar}
+  %%
+  Let~$p\in{P^\star}$, $\alpha\in{E^\ast}$, $m\in\M$, and~$n\in{N}$.  Then
+  \[
+    \<p,\alpha,m>\innerx{n}\<\ceu{\Skip},\alpha',m'>,
+  \]
+  for some~$\alpha'\in{E^\ast}$ and~$m'\in\M$.
+\end{restatable}
+\begin{proof}
+  By induction on the structure programs in~$P^\star$.  See
+  page~\pageref{lem:sem:inneri:behave-pstar}.
+\end{proof}
+
+We now formalize the aforementioned assumption that every execution path
+within the body of a loop instruction eventually reaches a~$\ceu{\Break}$
+instruction or gets blocked due to the execution of an~$\ceu{\Await}$
+instruction.  This assumption is used in the proof of
+\Cref{thm:sem:innerx:exhaust}.
+
+\begin{assumption}[label={ass:sem:innerx:loop}]
+  For all~$p\in{P}$, $\alpha\in{E^\ast}$, $m\in\M$, and~$n\in{N}$,
+  \[
+    \exists\delta\in\Delta(\<\ceu{\Loop{p}},\alpha,m>\innerx{n}\delta),
+  \]
+  where~$\delta=\<p',\alpha',m',n>$ and~$p'=\ceu{\Break\Atloop{p}}$ or
+  $\blocked(p',\alpha',n)=1$.
+\end{assumption}
+
+A configuration~$\<p,\alpha,m,n>$ such that~$p=\ceu{\Skip,\Break}$
+or~$\blocked(p,\alpha,n)=1$ serves as normal form for inner-steps, i.e., its
+state~$\<\alpha,m>$ embodies the result of an exhaustive number of
+applications of the inner-step relation.  Such configurations are called
+\emph{inner-step irreducible}.
+
+\begin{definition}[label={def:sem:inner:irreducible},
+  name={Inner-step irreducible configuration}]
+  For all~$\delta=\<p,\alpha,m,n>\in\Delta$, we
+  write~$\Hinner\<p,\alpha,m,n>$ iff~$p=\ceu{\Skip,\Break}$
+  or~$\blocked(p,\alpha,n)=1$.  \emph{Par abus de language}, we sometimes
+  write~$\delta_\Hinner\in\Delta$ to indicate that~$\delta$ is inner-step
+  irreducible.
+\end{definition}
+
+The next lemma guarantees that the qualifier ``irreducible'' is justified.
+
+\begin{restatable}[label={lem:sem:inneri:irr-unique}]{lemma}
+  {lemseminneriirrunique}
+  %%
+  Let~$\delta$, $\delta'_\Hinner\in\Delta$.  If~$\delta\inner[i]{n}\delta'$,
+  then
+  \begin{enumerate}
+  \item\label{lem:sem:inneri:irr-unique:1} for all~$j>i$,
+    $\delta''\in\Delta$, $\delta\mathbin{\not\!{\inner[j]{}}}\delta''$;
+    %%
+  \item\label{lem:sem:inneri:irr-unique:2} for all~$j<i$,
+    $\delta''_\Hinner\in\Delta$,
+    $\delta\mathbin{\not\!{\inner[j]{}}}\delta''$.
+  \end{enumerate}
+\end{restatable}
+\begin{proof}
+  By contradiction on the assumption that there are such~$j$'s.  See
+  page~\pageref{proof:lem:sem:inneri:irr-unique}.
+\end{proof}
+
+The next theorem establishes that, for any initial configuration, an
+(inner-step) irreducible configuration can be obtained after a finite number
+of inner-step applications.
+
+\begin{restatable}[label={thm:sem:innerx:exhaust}]{theorem}
+  {thmseminnerxexhaust}
+  %%
+  For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
+  \[
+    \exists\delta_\Hinner\in\Delta(\<p,\alpha,m>\innerx{n}\delta).
+  \]
+\end{restatable}
+\begin{proof}
+  By induction on the structure of programs.  See
+  page~\pageref{proof:thm:sem:innerx:exhaust}.
+\end{proof}
+
+\begin{restatable}[label={thm:sem:innerx:exhaust-unique}]{theorem}
+  {thmseminnerxexhaustunique}
+  %%
+  For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
+  \[
+    \exists!i\ge0,\delta_\Hinner\in\Delta(\<p,\alpha,m>\inner[i]{n}\delta).
+  \]
+\end{restatable}
+\begin{proof}
+  Directly from \Cref{thm:sem:innerx:exhaust,thm:sem:inneri:det}, and
+  \Cref{lem:sem:inneri:irr-unique}.  See
+  page~\pageref{proof:thm:sem:innerx:exhaust-unique}.
+\end{proof}
+
+The theorem just proved formally justifies the definition of the
+\emph{inner-reaction operator}~$\Rinner$.
+
+\begin{definition}[name={Inner reaction},label={def:inner:R}]
+  For all~$\delta$, $\delta'\in\Delta$,
+  \[
+    \Rinner(\delta)=\delta'
+    \quad\text{iff}\quad
+    \delta\innerx{}\delta'
+    \enspace\text{and}\enspace
+    \delta'_\Hinner.
+  \]
+  We write~$\Rinner[n]$ to indicate that the reaction number on both sides
+  is~$n$.
+\end{definition}
+
+
+\subsection{The outer reaction}
+\label{sub:sem:outer}
+
+From the previous inner-reaction operation ($\Rinner$) we define the
+\emph{reaction-outer-step} relation~($\outersym$) which, when necessary,
+advances a configuration by popping the event stack (via function
+function~$\pop$).
+
+\begin{definition}[label={def:sem:pop}]
+  Function~$\pop\colon{E^*}\to{E^*}$ is defined as follows.
+  \begin{align*}
+    \pop(\nil)&=\nil\\
+    \pop(e\alpha)&=\alpha
+  \end{align*}
+\end{definition}
+
+\begin{definition}[label={def:sem:outer},name={Reaction outer-step}]
+  Relation~$\outersym\subseteq\Delta\times\Delta$ is defined inductively as
+  follows.
+  \begin{alignat}{2}
+    \label{def:sem:outer:empty}
+    &\AXC{$\Rinner[n]\<p,\alpha,m>=\<p',\alpha',m'>$}
+    \UIC{$\<p,\alpha,m>\outeri{n}\<p',\nil,m'>$}
+    \DP
+    &&\qquad\text{if~$p'=\ceu{\Skip,\Break}$}\\[1\jot]
+    %%
+    \label{def:sem:outer:pop}
+    &\AXC{$\Rinner[n]\<p,\alpha,m>=\<p',\alpha',m'>$}
+    \UIC{$\<p,\alpha,m>\outeri{n}\<p',\pop(\alpha'),m'>$}
+    \DP
+    &&\qquad\text{if~$\blocked(p',\alpha',n)=1$}
+  \end{alignat}
+\end{definition}
+
+The next lemmas establish that each outer step is deterministic and always
+terminates, i.e., that the reaction outer-step relation is in fact a total
+function.
+
+\begin{restatable}[label={lem:sem:outer:det},
+  name={Determinism of the outer-step relation}]{lemma}{lemsemouterdet}
+  For all~$p$, $p_1$, $p_2\in{P}$, $\alpha$, $\alpha_1$, $\alpha_2\in{E^*}$,
+  $m$, $m_1$, $m_2\in\M$, and~$n\in{N}$,
+  if~$\<p,\alpha,m>\outeri{n}\<p_1,\alpha_1,m_1>$
+  and~$\<p,\alpha,m>\outeri{n}\<p_2,\alpha_2,m_2>$,
+  then~$\<p_1,\alpha_1,m_1>=\<p_2,\alpha_2,m_2>$.
+\end{restatable}
+\begin{proof}
+  Directly from \Cref{def:sem:outer}.  See
+  page~\pageref{proof:lem:sem:outer:det}.
+\end{proof}
+
+\begin{restatable}[label={lem:sem:outer:term},
+  name={Termination of the outer-step relation}]{lemma}{lemsemouterterm}
+  For all~$\delta\in\Delta$,
+  \[
+    \exists\delta'\in\Delta(\delta\outerbin\delta').
+  \]
+\end{restatable}
+\begin{proof}
+  Directly from \Cref{def:sem:outer}.  See
+  page~\pageref{proof:lem:sem:outer:term}.
+\end{proof}
+
+Let~$\outerxsym$ denote the transitive closure of the outer-step relation
+(or the \emph{reaction outer-multi-step} relation).  Its formal definition
+is similar to \Cref{def:sem:innerx} without the reflexivity part.  As with
+relation~$\innersym$, an exhaustive number (nonzero, in this case) of
+applications of relation~$\outersym$ yields an irreducible configuration.
+Such \emph{outer-step irreducible} configurations are in fact inner-step
+irreducible configurations with the additional requirement of having an
+empty stack.
+
+\begin{definition}[label={def:sem:outer:irreducible},
+  name={Outer-step irreducible configuration}]
+  For all~$\delta=\<p,\alpha,m,n>\in\Delta$, we write~$\delta_\Houter$
+  iff~$\delta_\Hinner$ and~$\alpha=\nil$.
+\end{definition}
+
+The next theorem establishes that, for any initial configuration, an
+(outer-step) irreducible configuration can be obtained after a finite
+(non-zero) number of outer-step applications.
+
+\begin{restatable}[label={thm:sem:outerx:exhaust}]{theorem}
+  {thmsemouterxexhaust}
+  %%
+  For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
+  \[
+    \exists\delta_\Houter\in\Delta(\<p,\alpha,m>\innerx{n}\delta).
+  \]
+\end{restatable}
+\begin{proof}
+  By induction on~$\|\alpha|$.  See
+  page~\pageref{proof:thm:sem:outerx:exhaust}.
+\end{proof}
+
+
+\subsection{The complete reaction}
+\label{sec:sem:react}
+
+
+\section{Final remarks and future work}
+\label{sec:final}
+
+
+\appendix
+\section{Detailed proofs}
+\label{sec:proofs}
+
+\lemseminnerdet*
+\begin{proof}\label{proof:lem:sem:inner:det}
+  By induction on the structure of derivations.  The implication is
+  vacuously true for~$p=\ceu{\Skip,\Break,\Fin}$, as there are no rules to
+  evaluate such programs.  Let~$p\ne\ceu{\Skip,\Break,\Fin}$ and suppose
+  \[
+    d_1\Vdash\<p,\alpha,m>\inner{n}\<p_1,\alpha_1,m_1>
+    \quad\text{and}\quad
+    d_2\Vdash\<p,\alpha,m>\inner{n}\<p_2,\alpha_2,m_2>,
+  \]
+  for some derivations~$d_1$ and~$d_2$.  Then the following cases are
+  possible, depending on the structure of~$p$.
+  \begin{case}
+  \item$p=\ceu{\Attr{v}{a}}$.  Derivations~$d_1$ and~$d_2$ are instances of
+    rule~\eqref{def:sem:inner:attr}.  Thus~$p_1=p_2=p$,
+    $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{\Await(e)}$.  Derivations~$d_1$ and~$d_2$ are instances of
+    rule~\eqref{def:sem:inner:await}.  Thus~$p_1=p_2=\ceu{\Awaiting(e,n')}$
+    with~$n'=n+1$, $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{\Awaiting(e,n')}$.  Derivations~$d_1$ and~$d_2$ are instances
+    of rule~\eqref{def:sem:inner:awaiting}.  Thus $p_1=p_2=\ceu{\Skip}$,
+    $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{\Emit(e)}$.  Derivations~$d_1$ and~$d_2$ are instances of
+    rule~\eqref{def:sem:inner:emit}.  Thus $p_1=p2=\ceu{\Emitting(n')}$
+    with~$n'=\|\alpha|$, $\alpha_1=\alpha_2=e\alpha$ and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{\Emitting(e,n')}$.  Derivations~$d_1$ and~$d_2$ are instances
+    of rule~\eqref{def:sem:inner:emitting}.  Thus $p_1=p_2=\ceu{\Skip}$,
+    $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{\Ifelse{b}{p'}{p''}}$.
+    \begin{case}
+    \item$\eval(b,m)=1$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:if-true}.  Thus $p_1=p_2=p'$,
+      $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+      %%
+    \item$\eval(b,m)=0$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:if-false}.  Thus $p_1=p_2=p''$,
+      $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+    \end{case}
+    %%
+  \item$p=\ceu{p';p''}$.
+    \begin{case}
+    \item$p'=\ceu{\Skip}$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:seq-skip}.  Thus $p_1=p_2=p''$,
+      $\alpha_1=\alpha_2=\alpha$, and $m_1=m_2=m$.
+      %%
+    \item$p'=\ceu{\Break}$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:seq-break}.  Thus~$p_1=p_2=p'$,
+      $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$.  Derivations~$d_1$ and~$d_2$ are
+      instances of rule~\eqref{def:sem:inner:seq}.  Thus there are
+      derivations~$d_1'$ and~$d_2'$ such that
+      \[
+        d_1'\Vdash\<p',\alpha,m>\inner{n}\<p_1',\alpha_1,m_1>
+        \quad\text{and}\quad
+        d_2'\Vdash\<p',\alpha,m>\inner{n}\<p_2',\alpha_2,m_2>,
+      \]
+      for some~$p_1'$, $p_2'\in{P}$.  Since~$d_1'\prec{d_1}$
+      and~$d_2'\prec{d_2}$, by induction hypothesis, $p_1'=p_2'$,
+      $\alpha_1=\alpha_2$, and~$m_1=m_2$, which implies
+      $p_1=p_1';p''=p_2';p''=p_2$.
+    \end{case}
+    %%
+  \item$p=\ceu{\Loop{p'}}$.  Derivations~$d_1$ and~$d_2$ are instances of
+    rule~\eqref{def:sem:inner:loop}.  Thus~$p_1=p_2=\ceu{p'\Atloop{p'}}$,
+    $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+    %%
+  \item$p=\ceu{p'\Atloop{p''}}$.
+    \begin{case}
+    \item$p'=\ceu\Skip$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:atloop-skip}.
+      Thus~$p_1=p_2=\ceu{\Loop{p'}}$, $\alpha_1=\alpha_2=\alpha$,
+      and~$m_1=m_2=m$.
+      %%
+    \item$p'=\ceu\Break$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:atloop-break}.  Thus~$p_1=p_2=\ceu{\Skip}$,
+      $\alpha_1=\alpha_2=\alpha$, and~$m_1=m_2=m$.
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$.  Derivations~$d_1$ and~$d_2$ are
+      instances of rule~\eqref{def:sem:inner:atloop}.  Thus there are
+      derivations~$d_1'$ and~$d_2'$ such that
+      \[
+        d_1'\Vdash\<p',\alpha,m>\inner{n}\<p_1',\alpha_1,m_1>
+        \quad\text{and}\quad
+        d_2'\Vdash\<p',\alpha,m>\inner{n}\<p_2',\alpha_2,m_2>,
+      \]
+      for some~$p_1'$, $p_2'\in{P}$.  Since~$d_1'\prec{d_1}$
+      and~$d_2'\prec{d_2}$, by induction hypothesis, $p_1'=p_2'$,
+      $\alpha_1=\alpha$, and~$m_1=m_2$, which implies
+      \[
+        p_1=\ceu{p_1'\Atloop{p''}}=\ceu{p_2'\Atloop{p''}}=p_2.
+      \]
+    \end{case}
+    %%
+  \item$p=\ceu{p'\And{p''}}$.
+    \begin{case}
+    \item$p'=\ceu\Skip$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:and-skip-left}.  Thus~$p_1=p_2=p''$,
+      $\alpha_1=\alpha_2=\alpha$, and $m_1=m_2=m$.
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$p''=\ceu{\Skip}$.
+      \begin{case}
+      \item$\blocked(p',\alpha,n)=0$.  This case
+        becomes~\Cref{lem:sem:inner:det:and-left}.
+        %%
+      \item$\blocked(p',\alpha,n)=1$.  Derivations~$d_1$ and~$d_2$ are
+        instances of rule~\eqref{def:sem:inner:and-skip-right}.
+        Thus~$p_1=p_2=p'$, $\alpha_1=\alpha_2=\alpha$, and $m_1=m_2=m$.
+      \end{case}
+      %%
+    \item$p'=\ceu\Break$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:and-break-left}.
+      Thus~$p_1=p_2=\ceu{\clear(p'');\Break}$, $\alpha_1=\alpha_2=\alpha$,
+      and~$m_1=m_2=m$.
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$p''=\ceu{\Break}$.
+      \begin{case}
+      \item$\blocked(p',\alpha,n)=0$.  This case
+        becomes~\Cref{lem:sem:inner:det:and-left}.
+        %%
+      \item$\blocked(p',\alpha,n)=1$.  Derivations~$d_1$ and~$d_2$ are
+        instances of rule~\eqref{def:sem:inner:and-break-right}.
+        Thus~$p_1=p_2=\ceu{\clear(p');\Break}$, $\alpha_1=\alpha_2=\alpha$,
+        and~$m_1=m_2=m$.
+      \end{case}
+      %%
+    \item\label{lem:sem:inner:det:and-left}$p',p''\ne\ceu\Skip,\ceu\Break$.
+      \begin{case}
+      \item$\blocked(p',\alpha,n)=0$.  Derivations~$d_1$~and~$d_2$ are
+        instances of rule~\eqref{def:sem:inner:and-left}.  Thus there are
+        derivations~$d_1'$ and~$d_2'$ such that
+        \[
+          d_1'\Vdash\<p',\alpha,m>\inner{n}\<p_1',\alpha_1,m_1>
+          \quad\text{and}\quad
+          d_2'\Vdash\<p',\alpha,m>\inner{n}\<p_2',\alpha_2,m_2>,
+        \]
+        for some~$p_1'$, $p_2'\in{P}$.  Since~$d_1'\prec{d_1}$
+        and~$d_2'\prec{d_2}$, by induction hypothesis, $p_1'=p_2'$,
+        $\alpha_1=\alpha_2$, and~$m_1=m_2$, which implies
+        \[
+          p_1=(\ceu{p_1'\And{p''}})=(\ceu{p_2'\And{p''}})=p_2.
+        \]
+        %%
+      \item$\blocked(p',\alpha,n)=1$.  Derivations~$d_1$~and~$d_2$ are
+        instances of rule~\eqref{def:sem:inner:and-right}.  Thus there are
+        derivations~$d_1''$ and~$d_2''$ such that
+        \[
+          d_1''\Vdash\<p'',\alpha,m>\inner{n}\<p_1'',\alpha_1,m_1>
+          \quad\text{and}\quad
+          d_2''\Vdash\<p'',\alpha,m>\inner{n}\<p_2'',\alpha_2,m_2>,
+        \]
+        for some~$p_1''$, $p_2''\in{P}$.  Since~$d_1''\prec{d_1}$
+        and~$d_2''\prec{d_2}$, by induction hypothesis, $p_1''=p_2''$,
+        $\alpha_1=\alpha_2$, and~$m_1=m_2$, which implies
+        \[
+          p_1=(\ceu{p'\And{p_1''}})=(\ceu{p'\And{p_2''}})=p_2.
+        \]
+      \end{case}
+    \end{case}
+    %%
+  \item$p=\ceu{p'\Or{p''}}$.
+    \begin{case}
+    \item$p'=\ceu\Skip$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:or-skip-left}.
+      Thus~$p_1=p_2=\ceu\clear(p'')$, $\alpha_1=\alpha_2=\alpha$,
+      and~$m_1=m_2=m$.
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$p''=\ceu{\Skip}$.
+      \begin{case}
+      \item$\blocked(p',\alpha,n)=0$.  This case
+        becomes~\Cref{lem:sem:inner:det:or-left}.
+        %%
+      \item$\blocked(p',\alpha,n)=1$.  Derivations~$d_1$ and~$d_2$ are
+        instances of rule~\eqref{def:sem:inner:or-skip-right}.
+        Thus~$p_1=p_2=\ceu\clear(p')$, $\alpha_1=\alpha_2=\alpha$,
+        and~$m_1=m_2=m$.
+      \end{case}
+      %%
+    \item$p'=\ceu\Break$.  Derivations~$d_1$ and~$d_2$ are instances of
+      rule~\eqref{def:sem:inner:or-break-left}.
+      Thus~$p_1=p_2=\ceu{\clear(p'');\Break}$, $\alpha_1=\alpha_2=\alpha$,
+      and~$m_1=m_2=m$.
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$p''=\ceu{\Break}$.
+      \begin{case}
+      \item$\blocked(p',\alpha,n)=0$.  This case
+        becomes~\Cref{lem:sem:inner:det:or-left}.
+        %%
+      \item$\blocked(p',\alpha,n)=1$.  Derivations~$d_1$ and~$d_2$ are
+        instances of rule~\eqref{def:sem:inner:or-break-right}.
+        Thus~$p_1=p_2=\ceu{\clear(p');\Break}$, $\alpha_1=\alpha_2=\alpha$,
+        and~$m_1=m_2=m$.
+      \end{case}
+      %%
+    \item\label{lem:sem:inner:det:or-left}$p',p''\ne\ceu\Skip,\ceu\Break$.
+      \begin{case}
+      \item$\blocked(p',\alpha,n)=0$.  Derivations~$d_1$~and~$d_2$ are
+        instances of rule~\eqref{def:sem:inner:or-left}.  Thus there are
+        derivations~$d_1'$ and~$d_2'$ such that
+        \[
+          d_1'\Vdash\<p',\alpha,m>\inner{n}\<p_1',\alpha_1,m_1>
+          \quad\text{and}\quad
+          d_2'\Vdash\<p',\alpha,m>\inner{n}\<p_2',\alpha_2,m_2>,
+        \]
+        for some~$p_1'$, $p_2'\in{P}$.  Since~$d_1'\prec{d_1}$
+        and~$d_2'\prec{d_2}$, by induction hypothesis, $p_1'=p_2'$,
+        $\alpha_1=\alpha_2$, and~$m_1=m_2$, which implies
+        \[
+          p_1=(\ceu{p_1'\Or{p''}})=(\ceu{p_2'\Or{p''}})=p_2.
+        \]
+        %%
+      \item$\blocked(p',\alpha,n)=1$.  Derivations~$d_1$ and~$d_2$ are
+        instances of rule~\eqref{def:sem:inner:or-right}.  Thus there are
+        derivations~$d_1''$ and~$d_2''$ such that
+        \[
+          d_1''\Vdash\<p'',\alpha,m>\inner{n}\<p_1'',\alpha_1,m_1>
+          \quad\text{and}\quad
+          d_2''\Vdash\<p'',\alpha,m>\inner{n}\<p_2'',\alpha_2,m_2>,
+        \]
+        for some~$p_1''$, $p_2''\in{P}$.  Since~$d_1''\prec{d_1}$
+        and~$d_2''\prec{d_2}$, by induction hypothesis, ~$p_1''=p_2''$,
+        $\alpha_1=\alpha_2$, and~$m_1=m_2$, which implies
+        \[
+          p_1=(\ceu{p'\Or{p_1''}})=(\ceu{p'\Or{p_2''}})=p_2.\qedhere
+        \]
+      \end{case}
+    \end{case}
+  \end{case}
+\end{proof}
+
+
+\thmseminneridet*
+\begin{proof}\label{proof:thm:sem:inneri:det}
+  By induction on~$i$.  The statement is trivially true for~$i=0$ and
+  follows directly from \Cref{lem:sem:inner:det} for~$i=1$.  Suppose
+  \begin{align*}
+    \label{lem:sem:innerx:det:1}
+    \<p,\alpha,m>
+    &\inner[1]{n}\<p_1',\alpha_1',m_1'>
+    \inner[i-1]{n}\<p_1,\alpha_1,m_1>\\
+    %%
+    \<p,\alpha,m>
+    &\inner[1]{n}\<p_2',\alpha_2',m_2'>
+    \inner[i-1]{n}\<p_2,\alpha_2,m_2>,
+  \end{align*}
+  for some~$i>1$, $p_1'$, $p_2'\in{P}$, $\alpha_1'$, $\alpha_2'\in{E^\ast}$,
+  $m_1'$, $m_2'\in\M$.  By \Cref{lem:sem:inner:det},
+  \[
+    \<p_1',\alpha_1',m_1'>=\<p_2',\alpha_2',m_2'>,
+  \]
+  and by induction hypothesis,
+  \[
+    \<p_1,\alpha_1,m_1>=\<p_2,\alpha_2,m_2>.\qedhere
+  \]
+\end{proof}
+
+
+\lemseminneribehave*
+\begin{proof}\label{proof:lem:sem:inneri:behave} By induction on~$i$.
+  \begin{enumerate}
+  \item The statement is trivially true for~$i=0$, and follows directly from
+    rule~\eqref{def:sem:inner:seq} for~$i=1$.  Suppose
+    \begin{equation}\label{proof:lem:sem:inneri:behave:1-1}
+      \<p_1,\alpha,m>
+      \inner[1]{n}\<p_1'',\alpha'',m''>
+      \inner[i-1]{n}\<p_1',\alpha',m'>,
+    \end{equation}
+    for some~$i>1$, $p_1''\in{P}$, $\alpha''\in{E^\ast}$, and~$m''\in\M$.
+    Then~$p_1''\ne\ceu{\Skip,\Break}$, and by
+    rule~\eqref{def:sem:inner:seq},
+    \begin{equation}\label{proof:lem:sem:inneri:behave:1-2}
+      \<p_1;p_2,\alpha,m>\inner[1]{n}\<p_1'';p_2,\alpha'',m''>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:1-1}, by induction hypothesis,
+    \begin{equation}\label{proof:lem:sem:inneri:behave:1-3}
+      \<p_1'';p_2,\alpha'',m''>\inner[i-1]{n}\<p_1';p_2,\alpha',m'>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:1-2}
+    and~\eqref{proof:lem:sem:inneri:behave:1-3},
+    \[
+      \<p_1;p_2,\alpha,m>\inner[i]{n}\<p_1';p_2,\alpha',m'>.
+    \]
+    %%
+  \item The statement is trivially true for~$i=0$, and follows directly from
+    rule~\eqref{def:sem:inner:atloop} for~$i=1$.  Suppose
+    \begin{equation}\label{proof:lem:sem:inneri:behave:2-1}
+      \<p_1,\alpha,m>
+      \inner[1]{n}\<p_1'',\alpha'',m''>
+      \inner[i-i]{n}\<p_1',\alpha',m'>,
+    \end{equation}
+    for some~$i>1$, $p_1''\in{P}$, $\alpha''\in{E^\ast}$, and~$m''\in\M$.
+    Then~$p_1''\ne\ceu{\Skip,\Break}$, and by
+    rule~\eqref{def:sem:inner:atloop},
+    \begin{equation}\label{proof:lem:sem:inneri:behave:2-2}
+      \<\ceu{p_1\Atloop{p_2}},\alpha,m>
+      \inner[1]{n}\<\ceu{p_1''\Atloop{p_2}},\alpha'',m''>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:2-1}, by induction hypothesis,
+    \begin{equation}\label{proof:lem:sem:inneri:behave:2-3}
+      \<\ceu{p_1''\Atloop{p_2}},\alpha'',m''>
+      \inner[i-1]{n}\<\ceu{p_1'\Atloop{p_2}},\alpha',m'>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:2-2}
+    and~\eqref{proof:lem:sem:inneri:behave:2-3},
+    \[
+      \<\ceu{p_1\Atloop{p_2}},\alpha,m>
+      \inner[i]{n}\<\ceu{p_1'\Atloop{p_2}},\alpha',m'>.
+    \]
+    %%
+  \item The statement is trivially true for~$i=0$, and follows directly from
+    rule~\eqref{def:sem:inner:and-left} for~$i=1$.  Suppose
+    \begin{equation}\label{proof:lem:sem:inneri:behave:3-1}
+      \<p_1,\alpha,m>
+      \inner[1]{n}\<p_1'',\alpha'',m''>
+      \inner[i-i]{n}\<p_1',\alpha',m'>,
+    \end{equation}
+    for some~$i>1$, $p_1''\in{P}$, $\alpha''\in{E^\ast}$, and~$m''\in\M$.
+    Then~$p_1''\ne\ceu{\Skip,\Break}$ and~$\blocked(p_1,\alpha,n)=0$
+    (otherwise, no rule would be applicable).  Thus, by
+    rule~\eqref{def:sem:inner:and-left},
+    \begin{equation}\label{proof:lem:sem:inneri:behave:3-2}
+      \<\ceu{p_1\And\,p_2},\alpha,m>
+      \inner[1]{n}\<\ceu{p_1''\And\,p_2},\alpha'',m''>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:3-1}, by induction hypothesis,
+    \begin{equation}\label{proof:lem:sem:inneri:behave:3-3}
+      \<\ceu{p_1''\And\,p_2},\alpha'',m''>
+      \inner[i-1]{n}\<\ceu{p_1'\And\,p_2},\alpha',m'>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:3-2}
+    and~\eqref{proof:lem:sem:inneri:behave:3-3},
+    \[
+      \<\ceu{p_1\And{p_2}},\alpha,m>
+      \inner[i]{n}\<\ceu{p_1'\And\,p_2},\alpha',m'>.
+    \]
+    %%
+  \item The statement is trivially true for~$i=0$, and follows directly from
+    rule~\eqref{def:sem:inner:or-left} for~$i=1$.  Suppose
+    \begin{equation}\label{proof:lem:sem:inneri:behave:4-1}
+      \<p_1,\alpha,m>
+      \inner[1]{n}\<p_1'',\alpha'',m''>
+      \inner[i-i]{n}\<p_1',\alpha',m'>,
+    \end{equation}
+    for some~$i>1$, $p_1''\in{P}$, $\alpha''\in{E^\ast}$, and~$m''\in\M$.
+    Then~$p_1''\ne\ceu{\Skip,\Break}$ and~$\blocked(p_1,\alpha,n)=0$
+    (otherwise, no rule would be applicable).  Thus, by
+    rule~\eqref{def:sem:inner:or-left},
+    \begin{equation}\label{proof:lem:sem:inneri:behave:4-2}
+      \<\ceu{p_1\Or\,p_2},\alpha,m>
+      \inner[1]{n}\<\ceu{p_1''\Or\,p_2},\alpha'',m''>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:4-1}, by induction hypothesis,
+    \begin{equation}\label{proof:lem:sem:inneri:behave:4-3}
+      \<\ceu{p_1''\Or\,p_2},\alpha'',m''>
+      \inner[i-1]{n}\<\ceu{p_1'\Or\,p_2},\alpha',m'>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:4-2}
+    and~\eqref{proof:lem:sem:inneri:behave:4-3},
+    \[
+      \<\ceu{p_1\Or\,p_2},\alpha,m>
+      \inner[i]{n}\<\ceu{p_1'\Or\,p_2},\alpha',m'>.
+    \]
+    %%
+  \item The statement is trivially true for~$i=0$, and follows directly from
+    rule~\eqref{def:sem:inner:and-right} for~$i=1$.  Suppose that
+    $\blocked(p_1,\alpha,n)=1$ and that
+    \begin{equation}\label{proof:lem:sem:inneri:behave:5-1}
+      \<p_2,\alpha,m>
+      \inner[1]{n}\<p_2'',\alpha'',m''>
+      \inner[i-1]{n}\<p_2',\alpha',m'>,
+    \end{equation}
+    for some~$i>1$, $p_2''\in{P}$, $\alpha''\in{E^\ast}$, and~$m''\in\M$.
+    Then~$p_2''\ne\ceu{\Skip,\Break}$ and~$\blocked(p_2,\alpha,m)=0$
+    (otherwise, no rule would be applicable).  Thus, by
+    rule~\eqref{def:sem:inner:and-right},
+    \begin{equation}\label{proof:lem:sem:inneri:behave:5-2}
+      \<\ceu{p_1\And\,p_2},\alpha,m>
+      \inner[1]{n}\<\ceu{p_1\And\,p_2''},\alpha'',m''>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:5-1}, by induction hypothesis,
+    \begin{equation}\label{proof:lem:sem:inneri:behave:5-3}
+      \<\ceu{p_1\And\,p_2''},\alpha'',m''>
+      \inner[i-1]{n}\<\ceu{p_1\And\,p_2'},\alpha',m'>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:5-2}
+    and~\eqref{proof:lem:sem:inneri:behave:5-3},
+    \[
+      \<\ceu{p_1\And\,p_2},\alpha,m>
+      \inner[i]{n}\<\ceu{p_1\And\,p_2'},\alpha',m'>.
+    \]
+    %%
+  \item The statement is trivially true for~$i=0$, and follows directly from
+    rule~\eqref{def:sem:inner:or-right} for~$i=1$.  Suppose that
+    $\blocked(p_1,\alpha,n)=1$ and that
+    \begin{equation}\label{proof:lem:sem:inneri:behave:6-1}
+      \<p_2,\alpha,m>
+      \inner[1]{n}\<p_2'',\alpha'',m''>
+      \inner[i-1]{n}\<p_2',\alpha',m'>,
+    \end{equation}
+    for some~$i>1$, $p_2''\in{P}$, $\alpha''\in{E^\ast}$, and~$m''\in\M$.
+    Then~$p_2''\ne\ceu{\Skip,\Break}$ and~$\blocked(p_2,\alpha,m)=0$
+    (otherwise, no rule would be applicable).  Thus, by
+    rule~\eqref{def:sem:inner:or-right},
+    \begin{equation}\label{proof:lem:sem:inneri:behave:6-2}
+      \<\ceu{p_1\Or\,p_2},\alpha,m>
+      \inner[1]{n}\<\ceu{p_1\Or\,p_2''},\alpha'',m''>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:6-1}, by induction hypothesis,
+    \begin{equation}\label{proof:lem:sem:inneri:behave:6-3}
+      \<\ceu{p_1\Or\,p_2''},\alpha'',m''>
+      \inner[i-1]{n}\<\ceu{p_1\Or\,p_2'},\alpha',m'>.
+    \end{equation}
+    From~\eqref{proof:lem:sem:inneri:behave:6-2}
+    and~\eqref{proof:lem:sem:inneri:behave:6-3},
+    \[
+      \<\ceu{p_1\Or\,p_2},\alpha,m>
+      \inner[i]{n}\<\ceu{p_1\Or\,p_2'},\alpha',m'>.\qedhere
+    \]
+  \end{enumerate}
+\end{proof}
+
+
+\lemseminneribehavepstar*
+\begin{proof}\label{proof:lem:sem:inneri:behave-pstar}
+  By induction on the structure of programs in~$P^\star$.
+  \begin{case}
+  \item$p=\ceu{\Skip}$.
+    Then~$\<\ceu{\Skip},\alpha,m>\inner[0]{n}\<\ceu{\Skip},\alpha,m>$.
+  \item$p=\ceu{\Attr{v}{a}}$.  By rule~\eqref{def:sem:inner:attr},
+    \[
+      \<\ceu{\Attr{v}{a}},\alpha,m>
+      \inner[1]{n}\<\ceu{\Skip},\alpha,m[v/\eval(a)]>.
+    \]
+  \item$p=\ceu{\Ifelse{b}{p'}{p''}}$.
+    \begin{case}
+    \item$\eval(b,m)=1$.  By rule~\eqref{def:sem:inner:if-true}
+      and by induction hypothesis,
+      \[
+        \<\ceu{\Ifelse{b}{p'}{p''}},\alpha,m>
+        \inner[1]{n}\<p',\alpha,m>
+        \innerx{n}\<\ceu{\Skip},\alpha',m'>.
+      \]
+    \item$\eval(b,m)=0$.  By rule~\eqref{def:sem:inner:if-false}
+      and by induction hypothesis,
+      \[
+        \<\ceu{\Ifelse{b}{p'}{p''}},\alpha,m>
+        \inner[1]{n}\<p'',\alpha,m>
+        \innerx{n}\<\ceu{\Skip},\alpha',m'>.
+      \]
+    \end{case}
+  \item$p=\ceu{p';p''}$.
+    \begin{case}
+    \item$p=\ceu{\Skip}$.  By rule~\eqref{def:sem:inner:seq-skip}
+      and by induction hypothesis,
+      \[
+        \<\ceu{\Skip;p''},\alpha,m>
+        \inner[1]{n}\<p'',\alpha,m>
+        \innerx{n}\<\ceu{\Skip},\alpha',m'>.
+      \]
+    \item$p'\ne\ceu{\Skip}$.  By induction hypothesis,
+      \[
+        \<p',\alpha,m>\innerx{n}\<\ceu{\Skip},\alpha',m'>.
+      \]
+      By \cref{lem:sem:inneri:behave:seq} of \Cref{lem:sem:inneri:behave}
+      (as~$P^\star\subseteq{P}$) and by rule~\eqref{def:sem:inner:seq-skip},
+      \[
+        \<p';p'',\alpha,m>
+        \innerx{n}\<\ceu{\Skip};p'',\alpha',m'>
+        \inner[1]{n}\<p'',\alpha',m'>.
+      \]
+      Therefore, by induction hypothesis,
+      \[
+        \<p'',\alpha',m'>\innerx{n}\<\ceu{\Skip},\alpha'',m''>.
+        \qedhere
+      \]
+    \end{case}
+  \end{case}
+\end{proof}
+
+
+\lemseminneriirrunique*
+\begin{proof}\label{proof:lem:sem:inneri:irr-unique}
+  Let~$\delta\inner[i]{n}\delta'$, for some~$i\ge0$
+  and~$\delta'_\Hinner\in\Delta$.
+  \begin{enumerate}
+  \item For the sake of a contradiction, suppose there are~$j>i$
+    and~$\delta''\in\Delta$ such that~$\delta\inner[j]{n}\delta''$.  Then,
+    by \Cref{def:sem:innerx},
+    \begin{equation}\label{proof:lem:sem:inneri:irr-unique:1}
+      \delta
+      \inner[i]{n}\delta'
+      \inner[i+1]{n}\delta'_1
+      \inner[i+2]{n}\cdots\inner[j]{n}\delta''.
+    \end{equation}
+    As~$\delta'=\<p',\alpha',m',n>$ is irreducible, $p=\ceu{\Skip,\Break}$
+    or~$\blocked(p',\alpha',n)=1$.  In either case, by
+    \Cref{def:sem:inner,def:sem:blocked}, there is no~$\delta'_1$ such
+    that~$\delta'\inner[1]{n}\delta_1'$, which
+    contradicts~\eqref{proof:lem:sem:inneri:irr-unique:1}.  Therefore, no
+    such~$j$ can exist.
+    %%
+  \item Again, for the sake of a contradiction, suppose there is are~$j<i$
+    and~$\delta''_\Hinner\in\Delta$ such that~$\delta\inner[j]{n}\delta''$.
+    Then by \cref{lem:sem:inneri:irr-unique:1}, since~$i>j$, $\delta'$
+    could not exist, which absurd.  Therefore, our assumption that there is
+    such~$j$ is false.\qedhere
+  \end{enumerate}
+\end{proof}
+
+
+\thmseminnerxexhaust*
+\begin{proof}\label{proof:thm:sem:innerx:exhaust}
+  By induction on the structure of programs.  The theorem is trivially true
+  if~$\blocked(p,\alpha,n)=1$:
+  $\<p,\alpha,n>\inner[0]{n}\<p,\alpha,n>=\delta$.  If that is not the case,
+  then the following cases are possible.
+  \begin{case}
+  \item$p=\ceu{\Skip}$.  Then
+    $\<\ceu{\Skip},\alpha,m>\inner[0]{n}\<\ceu{\Skip},\alpha,m>=\delta$.
+    %%
+  \item$p=\ceu{\Attr{v}{a}}$. By rule~\eqref{def:sem:inner:attr},
+    $\<\ceu{\Attr{v}{a}},\alpha,m>
+    \inner[1]{n}\<\ceu{\Skip},\alpha,m[v/\eval(a)]>=\delta$.
+    %%
+  \item$p=\ceu{\Break}$.  Then
+    $\<\ceu{\Break},\alpha,m>\inner[0]{n}\<\ceu{\Break},\alpha,m>=\delta$.
+    %%
+  \item$p=\ceu{\Await(e)}$.  By rule~\eqref{def:sem:inner:await},
+    \[
+      \<\ceu{\Await(e)},\alpha,m>
+      \inner[1]{n}\<\ceu{\Awaiting(e,n')},\alpha,m>,
+    \]
+    where~$n'=n+1>n$.  Thus, by~\Cref{def:sem:blocked},
+    $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
+    Therefore~$\delta=\<\ceu{\Awaiting(e,n')},\alpha,m>$.
+    %%
+  \item$p=\ceu{\Awaiting(e,n')}$.  By
+    rule~\eqref{def:sem:inner:awaiting},
+    \[
+      \<\ceu{\Awaiting(e,n')},\alpha,m>
+      \inner[1]{n}\<\ceu{\Skip},\alpha,m>=\delta.
+    \]
+    %%
+  \item$p=\ceu{\Emit(e)}$.  By rule~\eqref{def:sem:inner:emit},
+    \[
+      \<\ceu{\Emit(e)},\alpha,m>
+      \inner[1]{n}\<\ceu{\Emitting(n')},e\alpha,m>,
+    \]
+    where~$n'=\|\alpha|\ne\|e\alpha|$.  Thus, by~\Cref{def:sem:blocked},
+    $\blocked(\ceu{\Emitting(n')},e\alpha,n)=1$.
+    Therefore~$\delta=\<\ceu{\Emitting(n')},e\alpha,m>$.
+    %%
+  \item$p=\ceu{\Emitting(e,n')}$ and~$\blocked(p,\alpha,n)=0$.  By
+    rule~\eqref{def:sem:inner:emitting},
+    \[
+      \<\ceu{\Emitting(n')},\alpha,m>
+      \inner[1]{n}\<\ceu{\Skip},\alpha,m>=\delta.
+    \]
+    %%
+  \item$p=\ceu{\Ifelse{b}{p'}{p''}}$.
+    \begin{case}
+    \item$\eval(b,m)=1$.  By rule~\eqref{def:sem:inner:if-true}
+      and by induction hypothesis,
+      \[
+        \<\ceu{\Ifelse{b}{p'}{p''}},\alpha,m>
+        \inner[1]{n}\<p',\alpha,m>
+        \innerx{n}\<p_1',\alpha',m'>=\delta.
+      \]
+      %%
+    \item$\eval(b,m)=0$.  By rule~\eqref{def:sem:inner:if-false} and by
+      induction hypothesis,
+      \[
+        \<\ceu{\Ifelse{b}{p'}{p''}},\alpha,m>
+        \inner[1]{n}\<p'',\alpha,m>
+        \innerx{n}\<p_2'',\alpha',m'>=\delta.
+      \]
+    \end{case}
+    %%
+  \item$p=p';p''$.
+    \begin{case}
+    \item$p'=\ceu{\Skip}$.  By rule~\eqref{def:sem:inner:seq-skip}
+      and by induction hypothesis,
+      \[
+        \<\ceu{\Skip};p'',\alpha,m>
+        \inner[1]{n}\<p'',\alpha,m>
+        \innerx{n}\<p_2'',\alpha',m'>=\delta.
+      \]
+      %%
+    \item$p'=\ceu{\Break}$.  By rule~\eqref{def:sem:inner:seq-break},
+      \[
+        \<\ceu{\Break};p'',\alpha,m>
+        \inner[1]{n}\<\ceu{\Break},\alpha,m>=\delta.
+      \]
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$\blocked(p,\alpha,n)=0$.  By
+      induction hypothesis,
+      \[
+        \<p',\alpha,m>\innerx{n}\<p_1',\alpha',m'>,
+      \]
+      where~$p_1'=\ceu{\Skip,\Break}$ or~$\blocked(p_1',\alpha',n)=1$.
+      Thus, by \cref{lem:sem:inneri:behave:seq} of
+      \Cref{lem:sem:inneri:behave},
+      \begin{equation}\label{proof:thm:sem:innerx:exhaust:1}
+        \<p';p'',\alpha,m>\innerx{n}\<p_1';p'',\alpha',m'>.
+      \end{equation}
+      \begin{case}
+      \item$\blocked(p_1',\alpha',n)=1$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:1},
+        by~\Cref{def:sem:blocked},
+        \[
+          \blocked(p_1';p'',\alpha',n)=1.
+        \]
+        Thus~$\delta=\<p_1';p'',\alpha',m'>$.
+        %%
+      \item$p_1'=\ceu{\Break}$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:1},
+        by rule~\eqref{def:sem:inner:seq-break},
+        \[
+          \<p';p'',\alpha,m>
+          \innerx{n}\<\ceu{\Break};p'',\alpha',m'>
+          \inner[1]{n}\<\ceu{\Break},\alpha',m'>=\delta.
+        \]
+        %%
+      \item$p_1'=\ceu{\Skip}$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:1},
+        by rule~\eqref{def:sem:inner:seq-skip} and by
+        induction hypothesis,
+        \[
+          \<p';p'',\alpha,m>
+          \innerx{n}\<\ceu{\Skip};p'',\alpha',m'>
+          \inner[1]{n}\<p'',\alpha',m'>
+          \innerx{n}\<p_2'',\alpha'',m''>=\delta.
+        \]
+      \end{case}
+    \end{case}
+      %%
+  \item$p=\ceu{\Loop{p'}}$.  By \Cref{ass:sem:innerx:loop},
+    \begin{equation}
+      \label{proof:thm:sem:innerx:exhaust:2}
+      \<p,\alpha,m>\innerx{n}\<p',\alpha',m'>,
+    \end{equation}
+    where~$p'=\ceu{\Break\Atloop{p}}$ or~$\blocked(p',\alpha',n)=1$.
+    \begin{case}
+    \item$\blocked(p',\alpha',n)=1$.
+      Then~$\delta=\<p',\alpha',m'>$.
+      %%
+    \item$p'=\ceu{\Break\Atloop{p}}$.
+      From~\eqref{proof:thm:sem:innerx:exhaust:2}, by
+      rule~\eqref{def:sem:inner:atloop-break},
+      \[
+        \<p,\alpha,m>
+        \innerx{n}\<\ceu{\Break\Atloop{p}},\alpha',m'>
+        \inner[1]{n}\<\ceu{\Skip},\alpha',m'>=\delta.
+      \]
+    \end{case}
+      %%
+  \item$p=\ceu{p'\Atloop{p''}}$.
+    \begin{case}
+    \item$p'=\ceu{\Skip}$.  By rule~\eqref{def:sem:inner:atloop-skip} and by
+      \Cref{ass:sem:innerx:loop},
+      \[
+        \<\ceu{\Skip\Atloop{p''}},\alpha,m>
+        \inner[1]{n}\<\ceu{\Loop{p''}},\alpha,m>
+        \innerx{n}\<p_2'',\alpha',m'>,
+      \]
+      where~$p_2''=\ceu{\Break\Atloop{p}}$
+      or~$\blocked(p_2'',\alpha',n)=1$.  In the first case, this case
+      becomes \Cref{proof:thm:sem:innerx:exhaust:atloop-break}.  In the
+      second case, $\delta=\<p_2'',\alpha',m'>$.
+      %%
+    \item\label{proof:thm:sem:innerx:exhaust:atloop-break}
+      $p'=\ceu{\Break}$.  By rule~\eqref{def:sem:inner:atloop-break},
+      \[
+        \<\ceu{\Break\Atloop{p''}},\alpha,m>
+        \inner[1]{n}\<\ceu{\Skip},\alpha,m>=\delta.
+      \]
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$\blocked(p,\alpha,n)=0$.  By
+      induction hypothesis,
+      \[
+        \<p',\alpha,m>\innerx{n}\<p_1',\alpha',m'>,
+      \]
+      where~$p_1'=\ceu{\Skip,\Break}$ or~$\blocked(p_1',\alpha',n)=1$.
+      Thus, by \cref{lem:sem:inneri:behave:atloop} of
+      \Cref{lem:sem:inneri:behave},
+      \begin{equation}\label{proof:thm:sem:innerx:exhaust:3}
+        \<\ceu{p'\Atloop{p''}},\alpha,m>
+        \innerx{n}\<\ceu{p_1'\Atloop{p''}},\alpha',m'>.
+      \end{equation}
+      \begin{case}
+      \item$\blocked(p_1',\alpha',n)=1$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:3}, by
+        \Cref{def:sem:blocked},
+        \[
+          \blocked(\ceu{p_1'\Atloop{p''}},\alpha',n)=1.
+        \]
+        Thus~$\delta=\<\ceu{p_1'\Atloop{p''}},\alpha',m'>$.
+        %%
+      \item$p_1'=\ceu{\Break}$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:3}, by
+        rule~\eqref{def:sem:inner:atloop-break},
+        \[
+          \<\ceu{p'\Atloop{p''}},\alpha,m>
+          \innerx{n}\<\ceu{\Break\Atloop{p''}},\alpha',m'>
+          \inner[1]{n}\<\ceu{\Skip},\alpha',m'>=\delta.
+        \]
+        %%
+      \item$p_1'=\ceu{\Skip}$.  From~\eqref{proof:thm:sem:innerx:exhaust:3},
+        by rule~\eqref{def:sem:inner:atloop-skip},
+        \[
+          \<\ceu{p'\Atloop{p''}},\alpha,m>
+          \innerx{n}\<\ceu{\Skip\Atloop{p''}},\alpha',m'>
+          \inner[1]{n}\<\ceu{\Loop{p''}},\alpha',m'>.
+        \]
+        Thus, by \Cref{ass:sem:innerx:loop},
+        \[
+          \<\ceu{\Loop{p''}},\alpha',m'>\innerx{n}\<p_2'',\alpha'',m''>,
+        \]
+        where~$p_2''=\ceu{\Break\Atloop{p}}$
+        or~$\blocked(p_2'',\alpha'',n)=1$.  In the first case, this case
+        becomes \Cref{proof:thm:sem:innerx:exhaust:atloop-break}.  In the
+        second case, $\delta=\<p_2'',\alpha'',m''>$.
+      \end{case}
+    \end{case}
+    %%
+  \item$p=\ceu{p'\And{p''}}$.
+    \begin{case}
+    \item\label{proof:thm:sem:innerx:exhaust:and-skip-left}
+      $p'=\ceu{\Skip}$.  By rule~\eqref{def:sem:inner:and-skip-left} and by
+      induction hypothesis,
+      \[
+        \<\ceu{\Skip\And\,p''},\alpha,m>
+        \inner[1]{n}\<p'',\alpha,m>.
+        \innerx{n}\<p_2'',\alpha',m'>=\delta.
+      \]
+      %%
+    \item\label{proof:thm:sem:innerx:exhaust:and-break-left}
+      $p'=\ceu{\Break}$.  By rule~\eqref{def:sem:inner:and-break-left},
+      \[
+        \<\ceu{\Break\And\,p''},\alpha,m>
+        \inner[1]{n}\<\ceu{p_2'';\Break},\alpha,m>,
+      \]
+      where~$p_2''=\clear(p'')$.  By \Cref{def:sem:clear},
+      $p_2''\in{P^\star}$, thus, by \Cref{lem:sem:inneri:behave-pstar},
+      \[
+        \<p_2'',\alpha,m>\innerx{n}\<\ceu{\Skip},\alpha',m'>.
+      \]
+      Therefore, by \cref{lem:sem:inneri:behave:and-left} of
+      \Cref{lem:sem:inneri:behave} and by
+      rule~\eqref{def:sem:inner:seq-skip},
+      \[
+        \<\ceu{p_2'';\Break},\alpha,m>
+        \innerx{n}\<\ceu{\Skip;\Break},\alpha',m'>
+        \inner[1]{n}\<\ceu{\Break},\alpha',m'>=\delta.
+      \]
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$\blocked(p,\alpha,n)=0$.  By
+      induction hypothesis, $\<p',\alpha,m>\innerx{n}\<p_1',\alpha',m'>$,
+      where~$p_1'=\ceu{\Skip,\Break}$ or~$\blocked(p_1',\alpha',n)=1$.
+      Thus, by \cref{lem:sem:inneri:behave:and-left} of
+      \Cref{lem:sem:inneri:behave},
+      \begin{equation}\label{proof:thm:sem:innerx:exhaust:4}
+        \<\ceu{p'\And\,p''},\alpha,m>
+        \innerx{n}\<\ceu{p_1'\And\,p''},\alpha',m'>.
+      \end{equation}
+      \begin{case}
+      \item$p_1'=\ceu{\Skip}$.  Then this case becomes
+        \Cref{proof:thm:sem:innerx:exhaust:and-skip-left}.
+        %%
+      \item$p_1'=\ceu{\Break}$.  Then this case becomes
+        \Cref{proof:thm:sem:innerx:exhaust:and-break-left}.
+        %%
+      \item$\blocked(p_1',\alpha',n)=1$ and~$\blocked(p'',\alpha',n)=1$.  By
+        \Cref{def:sem:blocked}, $\blocked(\ceu{p_1'\And\,p''},\alpha',n)=1$.
+        Thus~$\delta=\<\ceu{p_1'\And\,p''},\alpha',m'>$.
+        %%
+      \item$\blocked(p_1',\alpha',n)=1$ and~$p''=\ceu{\Skip}$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:4}, by
+        rule~\eqref{def:sem:inner:and-skip-right},
+        \[
+          \<\ceu{p'\And\,\Skip},\alpha,m>
+          \innerx{n}\<\ceu{p_1'\And\Skip},\alpha',m'>
+          \inner[1]{n}\<p_1',\alpha',m'>=\delta.
+        \]
+        %%
+      \item$\blocked(p_1',\alpha',n)=1$ and~$p''=\ceu{\Break}$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:4}, by
+        rule~\eqref{def:sem:inner:and-break-right},
+        \[
+          \<\ceu{p'\And\,\Break},\alpha,m>
+          \innerx{n}\<\ceu{p_1'\And\Break},\alpha',m'>
+          \inner[1]{n}\<\ceu{p_1'';\Break},\alpha',m'>,
+        \]
+        where~$p_1''=\clear(p_1')$.  By \Cref{def:sem:clear},
+        $p_1''\in{P^\star}$, thus, by~\Cref{lem:sem:inneri:behave-pstar},
+        \[
+          \<p_1'',\alpha',m'>\innerx{n}\<\ceu{\Skip},\alpha'',m''>.
+        \]
+        Therefore, by \cref{lem:sem:inneri:behave:and-left} of
+        \Cref{lem:sem:inneri:behave} and by
+        rule~\eqref{def:sem:inner:seq-skip},
+        \[
+          \<\ceu{p_1'';\Break},\alpha',m'>
+          \innerx{n}\<\ceu{\Skip;\Break},\alpha'',m''>
+          \inner[1]{n}\<\ceu{\Break},\alpha'',m''>=\delta.
+        \]
+        %%
+      \item$\blocked(p_1',\alpha',n)=1$ and~$\blocked(p'',\alpha',n)=0$,
+        where~$p''\ne\ceu{\Skip,\Break}$.  By induction hypothesis,
+        \[
+          \<p'',\alpha',m'>\innerx{n}\<p_2'',\alpha'',m''>,
+        \]
+        where~$p_2''=\ceu{\Skip,\Break}$ or~$\blocked(p_2'',\alpha'',n)=1$.
+        Thus, by \cref{lem:sem:inneri:behave:and-right} of
+        \Cref{lem:sem:inneri:behave},
+        \[
+          \<\ceu{p_1'\And\,p''},\alpha',m'>
+            \innerx{n}\<\ceu{p_1'\And\,p_2''},\alpha'',m''>.
+        \]
+
+        If~$\blocked(p_2'',\alpha'',n)=1$
+        then~$\delta=\<\ceu{p_1'\And\,p_2''},\alpha'',m''>$.
+
+        If~$p_2''=\ceu{\Skip}$ then, by
+        rule~\eqref{def:sem:inner:or-skip-right},
+        \[
+          \<\ceu{p_1'\And\,\Skip},\alpha'',m''>
+          \inner[1]{n}\<p_1',\alpha'',m''>=\delta.
+        \]
+
+        Finally, if~$p_2''=\ceu{\Break}$ then, by
+        rule~\eqref{def:sem:inner:and-break-right},
+        \[
+          \<\ceu{p_1'\And\,\Break},\alpha'',m''>
+          \inner[1]{n}\<\ceu{p_1'';\Break},\alpha'',m''>,
+        \]
+        where~$p_1''=\clear(p_1')$.  By \Cref{def:sem:clear},
+        $p_1''\in{P^\star}$, thus, by \Cref{lem:sem:inneri:behave-pstar},
+        \[
+          \<p_1'',\alpha'',m''>\innerx{n}\<\ceu{\Skip},\alpha''',m'''>.
+        \]
+        Therefore, by \cref{lem:sem:inneri:behave:seq} of
+        \Cref{lem:sem:inneri:behave} and by
+        rule~\eqref{def:sem:inner:seq-skip},
+        \[
+          \<\ceu{p_1'';\Break},\alpha'',m''>
+          \innerx{n}\<\ceu{\Skip;\Break},\alpha''',m'''>
+          \inner[1]{n}\<\ceu{\Break},\alpha''',m'''>=\delta.
+        \]
+      \end{case}
+    \end{case}
+    %%
+  \item$p=\ceu{p'\Or{p''}}$.
+    \begin{case}
+    \item\label{proof:thm:sem:innerx:exhaust:or-skip-left}
+      $p'=\ceu{\Skip}$.  By rule~\eqref{def:sem:inner:or-skip-left},
+      \[
+        \<\ceu{\Skip\Or\,p''},\alpha,m>
+        \inner[1]{n}\<p_2'',\alpha,m>,
+      \]
+      where~$p_2''=\clear(p'')$.  By \Cref{def:sem:clear},
+      $p_2''\in{P^\star}$, thus, by \Cref{lem:sem:inneri:behave-pstar},
+      \[
+        \<p_2'',\alpha,m>\innerx{n}\<\ceu{\Skip},\alpha',m'>=\delta.
+      \]
+      %%
+    \item\label{proof:thm:sem:innerx:exhaust:or-break-left}
+      $p'=\ceu{\Break}$.  By rule~\eqref{def:sem:inner:or-break-left},
+      \[
+        \<\ceu{\Break\Or\,p''},\alpha,m>
+        \inner[1]{n}\<\ceu{p_2'';\Break},\alpha,m>,
+      \]
+      where~$p_2''=\clear(p'')$.  By \Cref{def:sem:clear},
+      $p_2''\in{P^\star}$, thus, by \Cref{lem:sem:inneri:behave-pstar},
+      \[
+        \<\ceu{p_2''},\alpha,m>\innerx{n}\<\ceu{\Skip},\alpha',m'>.
+      \]
+      Therefore, by \cref{lem:sem:inneri:behave:seq} of
+      \Cref{lem:sem:inneri:behave} and by
+      rule~\eqref{def:sem:inner:seq-skip},
+      \[
+        \<\ceu{p_2'';\Break},\alpha,m>
+        \innerx{n}\<\ceu{\Skip;\Break},\alpha',m'>
+        \inner[1]{n}\<\ceu{\Break},\alpha',m'>=\delta.
+      \]
+      %%
+    \item$p'\ne\ceu{\Skip,\Break}$ and~$\blocked(p,\alpha,n)=0$.  By
+      induction hypothesis, $\<p',\alpha,m>\innerx{n}\<p_1',\alpha',m'>$,
+      where~$p_1'=\ceu{\Skip,\Break}$ or~$\blocked(p_1',\alpha',n)=1$.
+      Thus, by \cref{lem:sem:inneri:behave:or-left} of
+      \Cref{lem:sem:inneri:behave},
+      \begin{equation}
+        \label{proof:thm:sem:innerx:exhaust:5}
+        \<\ceu{p'\Or\,p''},\alpha,m>
+        \innerx{n}\<\ceu{p_1'\Or\,p''},\alpha',m'>.
+      \end{equation}
+      \begin{case}
+      \item$p_1'=\ceu{\Skip}$.  Then this case becomes
+        \Cref{proof:thm:sem:innerx:exhaust:or-skip-left}.
+        %%
+      \item$p_1'=\ceu{\Break}$.  Then this case becomes
+        \Cref{proof:thm:sem:innerx:exhaust:or-break-left}.
+        %%
+      \item$\blocked(p_1',\alpha',n)=1$ and~$\blocked(p'',\alpha',n)=1$.  By
+        \Cref{def:sem:blocked}, $\blocked(\ceu{p_1'\Or\,p''},\alpha',n)=1$.
+        Thus~$\delta=\<\ceu{p_1'\And\,p''},\alpha',m'>$.
+        %%
+      \item$\blocked(p_1',\alpha',n)=1$ and~$p''=\ceu{\Skip}$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:5}, by
+        rule~\eqref{def:sem:inner:or-skip-right},
+        \[
+          \<\ceu{p'\Or\Skip},\alpha,m>
+          \innerx{n}\<\ceu{p_1'\Or\Skip},\alpha',m'>
+          \inner[1]{n}\<p_1'',\alpha',m'>,
+        \]
+        where~$p_1''=\clear(p_1')$.  By \Cref{def:sem:clear},
+        $p_1''\in{P^\star}$, thus, by \Cref{lem:sem:inneri:behave-pstar},
+        \[
+          \<p_1'',\alpha',m'>\innerx{n}\<\ceu{\Skip},\alpha'',m''>=\delta.
+        \]
+        %%
+      \item$\blocked(p_1',\alpha',n)=1$ and~$p''=\ceu{\Break}$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:5}, by
+        rule~\eqref{def:sem:inner:or-break-right},
+        \[
+          \<\ceu{p'\Or\Break},\alpha,m>
+          \innerx{n}\<\ceu{p_1'\Or\Break},\alpha,m>
+          \inner[1]{n}\<\ceu{p_1'';\Break},\alpha',m'>,
+        \]
+        where~$p_1''=\clear(p_1')$.  By \Cref{def:sem:clear},
+        $p_1''\in{P^\star}$, thus, by \Cref{lem:sem:inneri:behave-pstar},
+        \[
+          \<p_1'',\alpha',m'>\innerx{n}\<\ceu{\Skip},\alpha'',m'>.
+        \]
+        Therefore, by \cref{lem:sem:inneri:behave:seq} of
+        \Cref{lem:sem:inneri:behave} and by
+        rule~\eqref{def:sem:inner:seq-skip},
+        \[
+          \<\ceu{p_1'';\Break},\alpha',m'>
+          \innerx{n}\<\ceu{\Skip;\Break},\alpha'',m''>
+          \inner[1]{n}\<\ceu{\Break},\alpha'',m''>=\delta.
+        \]
+        %%
+      \item$\blocked(p_1',\alpha',n)=1$ and~$\blocked(p'',\alpha',n)=0$,
+        where~$p''\ne\ceu{\Skip,\Break}$.  By induction hypothesis,
+        \[
+          \<p'',\alpha',m'>\innerx{n}\<p_2'',\alpha'',m''>,
+        \]
+        where~$p_2''=\ceu{\Skip,\Break}$ or~$\blocked(p_2'',\alpha'',n)=1$.
+        Thus by \cref{lem:sem:inneri:behave:or-right} of
+        \Cref{lem:sem:inneri:behave},
+        \[
+          \<\ceu{p_1'\Or\,p''},\alpha',m'>
+          \innerx{n}\<\ceu{p_1'\Or\,p_2''},\alpha'',m''>.
+        \]
+
+        If~$\blocked(p_2'',\alpha'',n)=1$
+        then~$\delta=\<\ceu{p_1'\Or\,p_2''},\alpha'',m''>$.
+
+        If~$p_2''=\ceu{\Skip}$ then, by
+        rule~\eqref{def:sem:inner:or-skip-right},
+        \[
+          \<\ceu{p_1'\Or\Skip},\alpha'',m''>
+          \inner[1]{n}\<\ceu{p_1''},\alpha'',m''>,
+        \]
+        where~$p_1''=\clear(p_1')$.  By \Cref{def:sem:clear},
+        $p_1''\in{P^\star}$, thus, by \Cref{lem:sem:inneri:behave-pstar},
+        \[
+          \<\ceu{p_1''},\alpha'',m''>
+          \innerx{n}\<\ceu{\Skip},\alpha''',m'''>=\delta.
+        \]
+
+        Finally, if~$p_2''=\ceu{\Break}$ then, by
+        rule~\eqref{def:sem:inner:or-break-right},
+        \[
+          \<\ceu{p_1'\Or\Break},\alpha'',m''>
+          \inner[1]{n}\<\ceu{p_1'';\Break},\alpha'',m''>,
+        \]
+        where~$p_1''=\clear(p_1')$.  By \Cref{def:sem:clear},
+        $p_1''\in{P^\star}$, thus, by \Cref{lem:sem:inneri:behave-pstar},
+        \[
+          \<\ceu{p_1''},\alpha'',m''>
+          \innerx{n}\<\ceu{\Skip},\alpha''',m'''>.
+        \]
+        Therefore, by \cref{lem:sem:inneri:behave:seq} of
+        \Cref{lem:sem:inneri:behave} and by
+        rule~\eqref{def:sem:inner:seq-skip},
+        \[
+          \<\ceu{p_1'';\Break},\alpha'',m''>
+          \innerx{n}\<\ceu{\Skip;\Break},\alpha''',m'''>
+          \inner[1]{n}\<\ceu{\Break},\alpha''',m'''>=\delta.
+          \qedhere
+        \]
+      \end{case}
+    \end{case}
+  \end{case}
+\end{proof}
+
+
+\thmseminnerxexhaustunique*
+\begin{proof}\label{proof:thm:sem:innerx:exhaust-unique}
+  By \Cref{thm:sem:innerx:exhaust}, there are~$i_1,i_2\ge0$ such that
+  \[
+    \<p,\alpha,m>\inner[i_1]{n}\<p_1,\alpha_1,m_1>
+    \quad\text{and}\quad
+    \<p,\alpha,m>\inner[i_2]{n}\<p_2,\alpha_2,m_2>,
+  \]
+  where~$\Hinner\<p_1,\alpha_1,m_1>$ and~$\Hinner\<p_2,\alpha_2,m_2>$.  By
+  \Cref{lem:sem:inneri:irr-unique}, $i_1=i_2$, and by
+  \Cref{thm:sem:inneri:det}, $p_1=p_2$, $\alpha_1=\alpha_2$, $m_1=m_2$.
+\end{proof}
+
+
+\lemsemouterdet*
+\begin{proof}
+  \label{proof:lem:sem:outer:det}
+  Suppose there are derivations~$d_1$ and~$d_2$ such that
+  \[
+    d_1\Vdash\<p,\alpha,m>\outeri{n}\<p_1,\alpha_1,m_1>
+    \quad\text{and}\quad
+    d_2\Vdash\<p,\alpha,m>\outeri{n}\<p_2,\alpha_2,m_2>.
+  \]
+  By \Cref{def:sem:outer},
+  $\Rinner[n]\<p,\alpha,m>=\<p',\alpha',m'>_\Hinner$.
+  \begin{case}
+  \item$p'=\ceu{\Skip,\Break}$.  Then~$d_1$ and~$d_2$ are instances of
+    rule~\eqref{def:sem:outer:empty}.  Thus $p_1=p_2=p'$,
+    $\alpha_1=\alpha_2=\nil$, and~$m_1=m_2=m'$.
+    %%
+  \item$\blocked(p',\alpha',m')$.  Then~$d_1$ and~$d_2$ are instances of
+    rule~\eqref{def:sem:outer:pop}.  Thus~$p_1=p_2=p'$,
+    $\alpha_1=\alpha_2=\pop(\alpha)$ and~$m_1=m_2=m'$.\qedhere
+  \end{case}
+\end{proof}
+
+\lemsemouterterm*
+\begin{proof}\label{proof:lem:sem:outer:term}
+  Let~$\delta\in\Delta$.  Then~$\Rinner(\delta)=\<p',\alpha',m',n>_\Hinner$.
+  \begin{case}
+  \item$p'=\ceu{\Skip,\Break}$.  By rule~\eqref{def:sem:outer:empty},
+    $\delta\outeri{n}\<p',\nil,m'>=\delta'$.
+  \item$\blocked(p',\alpha',n)$.  By rule~\eqref{def:sem:outer:pop},
+    $\delta\outeri{n}\<p',\pop(\alpha),m'>=\delta'$.
+  \end{case}
+\end{proof}
+
+
+\thmsemouterxexhaust*
+\begin{proof}\label{proof:thm:sem:outerx:exhaust}
+  Let~$\<p,\alpha,m,n>\in\Delta$.  Then
+  \[
+    \Rinner[n](p,\alpha,m)=\<p',\alpha',m'>_\Hinner,
+  \]
+  and by \Cref{def:sem:outer},
+  \begin{alignat}{2}
+    \label{proof:thm:sem:outerx:exhaust:1}
+    \<p,\alpha,m>&\outeri[1]{n}\<p',\nil,m'>
+    &\qquad\text{if~$p'=\ceu{\Skip,\Break}$, or}\\
+    %%
+    \label{proof:thm:sem:outerx:exhaust:2}
+    \<p,\alpha,m>&\outeri[1]{n}\<p',\pop(\alpha'),m'>
+    &\qquad\text{if~$\blocked(p',\alpha',n)=1$}
+  \end{alignat}
+  We proceed by induction on~$\|\alpha|$.
+  \begin{case}
+  \item$\alpha=\nil$.  Then either~\eqref{proof:thm:sem:outerx:exhaust:1}
+    or~\eqref{proof:thm:sem:outerx:exhaust:1}.  In both cases,
+    $\delta=\<p',\nil,m'>$.
+  \item$\alpha=e\alpha_1\dots\alpha_k$.
+    If~\eqref{proof:thm:sem:outerx:exhaust:1}, then
+    $\delta=\<p',\nil,m'>$.  If~\eqref{proof:thm:sem:outerx:exhaust:2}, then
+    \[
+      \<p,\alpha,m>\outeri[1]{n}\<p',\alpha_1\dots\alpha_k,m'>.
+    \]
+    By induction hypothesis,
+    \[
+      \<p',\alpha_1\dots\alpha_k,m'>\outerx{n}\<p'',\nil,m''>_\Hinner,
+    \]
+    for some~$p''\in{P}$ and~$m''\in{N}$.  Thus
+    \[
+      \<p,\alpha,m>\outerx{n}\<p'',\nil,m''>=\delta.\qedhere
+    \]
+  \end{case}
+\end{proof}
+\end{document}
+
+% LocalWords:  unwinded lemseminnerdet multi thmseminneridet abus de
+% LocalWords:  lemseminneribehave lemseminneribehavepstar lemsemouterdet
+% LocalWords:  thmseminnerxexhaust lemseminneriirrunique lemsemouterterm
+% LocalWords:  thmseminnerxexhaustunique thmsemouterxexhaust
