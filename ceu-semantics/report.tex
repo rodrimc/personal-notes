@@ -966,9 +966,9 @@ The next theorem establishes that, for any initial configuration, an
     rule~\eqref{def:sem:inner:emit}.  Thus $p_1=p2=\ceu{\Emitting(n')}$
     with~$n'=\|\alpha|$, $\alpha_1=\alpha_2=e\alpha$ and~$m_1=m_2=m$.
     %%
-  \item$p=\ceu{\Emitting(e,n')}$.  Derivations~$d_1$ and~$d_2$ are instances
-    of rule~\eqref{def:sem:inner:emitting}.  Thus $p_1=p_2=\ceu{\Skip}$,
-    $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
+  \item$p=\ceu{\Emitting(e,n')}$.  If $n'=|\alpha|$, then derivations~$d_1$
+    and~$d_2$ are instances of rule~\eqref{def:sem:inner:emitting}.
+    Thus $p_1=p_2=\ceu{\Skip}$, $\alpha_1=\alpha_2=\alpha$ and~$m_1=m_2=m$.
     %%
   \item$p=\ceu{\Ifelse{b}{p'}{p''}}$.
     \begin{case}
