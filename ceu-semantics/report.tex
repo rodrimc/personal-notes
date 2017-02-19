@@ -1540,8 +1540,9 @@ The next theorem establishes that, for any initial configuration, an
       \[
         \<\ceu{\Skip};p'',\alpha,m>
         \inner[1]{n}\<p'',\alpha,m>
-        \innerx{n}\<p_2'',\alpha',m'>=\delta.
+        \innerx{n}\<p_2'',\alpha',m'>=\delta,
       \]
+      where~$p_2''=\ceu{\Skip,\Break}$ or~$\blocked(p_2'',\alpha',n)=1$.
       %%
     \item$p'=\ceu{\Break}$.  By rule~\eqref{def:sem:inner:seq-break},
       \[
