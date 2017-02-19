@@ -1482,10 +1482,15 @@ The next theorem establishes that, for any initial configuration, an
     stack~$\alpha$.
     \begin{case}
     \item$e\ne a_{[1]}$.  By~\Cref{def:sem:blocked},
-    $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
+    $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$. Then
+    $\<\ceu{\Awaiting(e,n')},\alpha,m>
+    \inner[0]{n}\<\ceu{\Awaiting(e,n')},\alpha,m>=\delta$.
+    %%
     \item$n'>n$.  By~\Cref{def:sem:blocked},
-    $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$.
-
+    $\blocked(\ceu{\Awaiting(e,n')},\alpha,n)=1$. Then
+    $\<\ceu{\Awaiting(e,n')},\alpha,m>
+    \inner[0]{n}\<\ceu{\Awaiting(e,n')},\alpha,m>=\delta$.
+    %%
     \item$e=a_{[1]}$ and $n'\leq n$.  By rule~\eqref{def:sem:inner:awaiting},
     \[
       \<\ceu{\Awaiting(e,n')},\alpha,m>
