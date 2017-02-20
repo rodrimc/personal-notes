@@ -11,6 +11,7 @@
 \usepackage[varg]{txfonts}
 \usepackage{mathtools}
 \usepackage[nameinlink]{cleveref}
+\usepackage{listings}
 
 
 % Theorems.
@@ -196,6 +197,25 @@
   \ensuremath{#1}\ignorespaces
   \egroup
 }
+
+\lstdefinelanguage{ceu}{%
+  keywords={
+    this, var, watching, loop, do, await, end, escape, with, tag, or, par,
+    until, include, emit, void, int, float, char, uint, data, class, event,
+    function, f64, bool, char, every, and, input, output, min, if, true,
+    then, finalize, pool, new, break
+  },
+}
+\lstdefinelanguage{ceu-display}{%
+  language={ceu},
+  basicstyle=\scriptsize\ttfamily,
+  captionpos=b,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt,
+}
+
+\def\ceulst#1{\lstinline[language=ceu]|#1|}
 \makeatother
 
 
@@ -208,6 +228,136 @@
 
 \section{Introduction}
 \label{sec:intro}
+\Ceu\ is a reactive synchronous language designed for supporting the
+development of safe concurrent programs. The language offers high-level
+constructs to facilitate event handling specification~(\ceulst{await,emit}),
+as well as built-in constructs to compose concurrent lines of
+execution (\ceulst{par,par/and,par/or}).
+
+\Ceu\ programs depend on an external environment that provides input events.
+Due to the language reactive nature, programs constantly reacts to these
+input events (known as external events) in a process called reaction. Due to
+the language synchronous nature, reactions are conceptually instantaneous
+(they take no time) -- which means that conceptually \Ceu\ programs are
+always awaiting for events and react instantaneously.
+
+The \Ceu\ program depicted in Listing~\ref{lst:ceu-LEDs} illustrates these
+concepts. This program blinks two LEDs, \ceu{Led1} and
+\ceu{Led2}, by changing their state (on or off) every couple of seconds.
+When the program starts, the LEDs go on blinking until a key is pressed,
+i.e., event \ceu{KEY} occurs, at which point the program terminates.
+
+\begin{lstlisting}[
+  language={ceu-display},
+  caption={Blinking LEDs in~CÉU.},
+  label={lst:ceu-LEDs}]
+input void KEY;
+par/or
+do                 /* trail 1 */
+  loop do
+    await 2s;
+    _Led1_on()
+    await 2s;
+    _Led1_off()
+  end
+with               /* trail 2 */
+  loop do
+    await 4s;
+    _Led2_on()
+    await 4s;
+    _Led2_off()
+  end
+with               /* trail 3 */
+  await KEY;
+end
+\end{lstlisting}
+
+Line~1 declares the input event KEY (input events are emitted by the
+environment). Lines~2--19 define a parallel composition with three lines of
+exection (\emph{trails} in \ceu\ terminology). First trail~(lines~3--9)
+in loop awaits 2 seconds, turns \emph{Led1} on, awaits 2 seconds and turns
+\emph{Led1} off. Second trail~(lines~11--16) is analogous to the first, but
+awaits 4 seconds before turning \emph{Led2} on and off. Finally, last
+trail~(line~18) awaits for the KEY event before terminate. \ceulst{par/or}
+compositions finish when any of its trails finish (\ceulst{par/and}
+compositions finish when all of its trails finish and \ceulst{par}
+compositions never finish). Thus, this program finishes when the input event
+KEY is emitted by the environment.
+
+\Ceu\ allows communication between trails through internal events.
+To illustrate, consider Listing~\ref{lst:ceu-internal}. This program has
+a \ceulst{par/or} composition with three trails. The first one~(lines~4--8)
+awaits the external event A, performs some computation and then emits
+the internal event b~(line~7). At this point, the first trail
+halts and the execution moves to the second trail~(lines~9--12) which
+is awaiting for the internal event b~(line~10).  Second trail performs
+some computation and then emits the internal event c~(line~12). Now second
+trail halts and the execution moves to the third trail~(lines~13--17) which
+is awaiting for the internal event c~(line~15). Third trail performs some
+computation and then halts awaiting for another occurrence of event c. At
+this point the execution of second trail is resumed and, as there is nothing
+left to execute in that trail, it finishes leading to the end of the
+\ceulst{par/or} composition. Note that because the composition finishes,
+the first trail never has the chance to be resumed and perform the
+computation in line~8.
+
+\begin{lstlisting}[
+  language={ceu-display},
+  caption={Trails communicating through internal events.},
+  label={lst:ceu-internal}]
+input void A;
+event void b;
+event void c;
+par/or do
+  await A;
+  <...>
+  emit b;
+  <...>     /* code never executed */
+with
+  await b;
+  <...>
+  emit c;
+with
+  loop do
+    await c;
+    <...>
+  end
+end
+<...>
+\end{lstlisting}
+
+\Ceu\ has a deterministic semantics (discussed below), which means that
+programs always produces the same output and executes the same steps for a
+given sequence of external events.
+
+Finally, \Ceu\ implements the notion of safe abort with finalizations. A
+finalization statement executes when its associated block finishes (either
+naturally or by abrupt abortion --- e.g., a \ceulst{break} within
+a \ceulst{loop}). To illustrate, consider the Listing~\ref{lst:ceu-finalize}.
+\begin{lstlisting}[
+  language={ceu-display},
+  caption={Finalize block},
+  label={lst:ceu-finalize}]
+par/or do
+  var _buffer_t msg;
+  <...>                       /* prepares msg */
+  do
+    _send_request(&&msg);
+  finalize with
+    _send_cancel(&&msg);
+  end
+  await SEND_ACK;             /* transmission is complete */
+with
+  await 50ms;
+end
+\end{lstlisting}
+
+In this listing, the \ceulst{finalize} block~(lines~6--8) executes when
+the first trail~(lines~1--9) finishes. Thus, in this example, the process
+of sending the request in variable \emph{msg} is properly cancelled
+(by calling the \_send\_cancel() function) if the request takes more
+then 50ms to complete (i.e., the second trail finishes).
+
 
 
 \section{Formal semantics}
