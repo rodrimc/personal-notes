@@ -238,11 +238,11 @@
 
 \Ceu\ is a reactive synchronous language for the development of safe
 concurrent programs. The language offers high-level programming constructs
-to for event synchronization (\ceulst{await}, \ceulst{emit}) and the
+for event synchronization (\ceulst{await}, \ceulst{emit}) and the
 composition of concurrent lines of execution (\ceulst{par},
 \ceulst{par/and}, \ceulst{par/or}).
 
-\Ceu\ programs depend on an external environment that provides it input
+\Ceu\ programs depend on an external environment that provides them input
 events.  Due to the language reactive nature, programs constantly reacts to
 these external input events in a process called reaction.  Due to the
 language synchronous nature, reactions are conceptually instantaneous, which
@@ -283,7 +283,7 @@ with               /* trail 3 */
 end
 \end{lstlisting}
 
-Line~1 of \Cref{lst:ceu-LEDs} declares the eternal input event \ceulst{KEY}.
+Line~1 of \Cref{lst:ceu-LEDs} declares the external input event \ceulst{KEY}.
 Lines~2--19 define a parallel composition with three lines of execution,
 which are called \emph{trails} in \Ceu\ terminology.  The first
 trail~(lines~3--9) runs an infinite loop that awaits~2 seconds, turns
@@ -293,7 +293,7 @@ second trail~(lines~11--16) is similar, but awaits~4 seconds before turning
 \ceulst{KEY} and terminates.
 
 Since the three trails run in a \ceulst{par/or} composition (lines~2--19),
-the composition itself will finish when any of the child trails finishes.
+the composition itself will finish when any of its child trails finishes.
 Thus the program of \Cref{lst:ceu-LEDs} finishes when a input event
 \ceulst{KEY} is received from the environment.  (\Ceu\ also has a
 \ceulst{par/and} composition, which finish when all of its trails finish,
@@ -314,7 +314,7 @@ awaken.  The third trail, in turn, executes some non-blocking code and
 blocks waiting for another occurrence of event~\ceulst{c}.  At this point,
 the execution of second trail is resumed and, as there is nothing left to
 execute in that trail, it finishes killing the \ceulst{par/or} composition.
-Note that because the whole composition is terminated, the first trail will
+Note that because the whole composition has finished, the first trail will
 never wake up and reach line~8.
 
 \begin{lstlisting}[
@@ -1078,7 +1078,7 @@ The next theorem establishes that, for any initial configuration, an
   %%
   For all~$p\in{P}$, $\alpha\in{E^*}$, $m\in\mathcal{M}$, and~$n\in{N}$,
   \[
-    \exists\delta_\Houter\in\Delta(\<p,\alpha,m>\innerx{n}\delta).
+    \exists\delta_\Houter\in\Delta(\<p,\alpha,m>\outerx{n}\delta).
   \]
 \end{restatable}
 \begin{proof}[Proof idea]
