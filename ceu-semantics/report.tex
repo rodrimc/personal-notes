@@ -112,10 +112,11 @@
 \def\blocked{\mathit{blocked}}
 \def\clear{\mathit{clear}}
 \def\eval{\mathit{eval}}
-\def\Hinner{{\#_{\mathrm{in}}}}
-\newcommand\Rinner[1][]{{\mathcal{R}_{\mathrm{in}}^{#1}}}
 \def\pop{\mathit{pop}}
+\def\Hinner{{\#_{\mathrm{in}}}}
 \def\Houter{{\#_{\mathrm{out}}}}
+\newcommand\Rinner[1][]{{\mathcal{R}_{\mathrm{in}}^{#1}}}
+\newcommand\Router[1][]{{\mathcal{R}_{\mathrm{out}}^{#1}}}
 
 % Inner-step relation.
 \makeatletter
@@ -129,7 +130,10 @@
     \setbox1=\hbox to\wd2{\hfil$\scriptscriptstyle#1$\hfil}%
   \fi
   \setbox3=\hbox{$\null^{\box1}_{\box2}$}%
-  \dimen0=\wd3
+  \dimen0=.6ex
+  \ifdim\wd3>\dimen0
+    \dimen0=\wd3
+  \fi
   \rlap{\hbox{$\vrule height\the\ht0 depth\the\dp0 width.6pt
       \vcenter{\hrule height.3pt depth.3pt width\dimen0}$}}%
   \kern1pt\box3
@@ -173,7 +177,8 @@
   \rlap{\hskip-\dimexpr\wd\alignrulebox/2-\wd0-1.45pt#2}}
 \def\alignruleinner#1{\alignrule{$\strut\inner{n}\strut$}{#1}}
 
-% Céu instructions.
+
+% Céu abstract syntax.
 \makeatletter
 \def\@ceuop#1{\mathop{\texttt{#1}}}%
 \def\@ceubin#1{\mathbin{\texttt{#1}}}%
@@ -197,7 +202,9 @@
   \ensuremath{#1}\ignorespaces
   \egroup
 }
+\makeatother
 
+% Céu code.
 \lstdefinelanguage{ceu}{%
   keywords={
     this, var, watching, loop, do, await, end, escape, with, tag, or, par,
@@ -208,15 +215,15 @@
 }
 \lstdefinelanguage{ceu-display}{%
   language={ceu},
-  basicstyle=\scriptsize\ttfamily,
+  basicstyle=\footnotesize\ttfamily,
   captionpos=b,
   numbers=left,
   numberstyle=\tiny,
   numbersep=5pt,
 }
-
-\def\ceulst#1{\lstinline[language=ceu]|#1|}
-\makeatother
+\crefname{lstlisting}{listing}{listings}
+\Crefname{lstlisting}{Listing}{Listings}
+\def\ceulst#1{\lstinline[language=ceu,basicstyle=\ttfamily]|#1|}
 
 
 \title{A deterministic and terminating semantics for\\
@@ -228,82 +235,91 @@
 
 \section{Introduction}
 \label{sec:intro}
-\Ceu\ is a reactive synchronous language designed for supporting the
-development of safe concurrent programs. The language offers high-level
-constructs to facilitate event handling specification~(\ceulst{await,emit}),
-as well as built-in constructs to compose concurrent lines of
-execution (\ceulst{par,par/and,par/or}).
 
-\Ceu\ programs depend on an external environment that provides input events.
-Due to the language reactive nature, programs constantly reacts to these
-input events (known as external events) in a process called reaction. Due to
-the language synchronous nature, reactions are conceptually instantaneous
-(they take no time) -- which means that conceptually \Ceu\ programs are
-always awaiting for events and react instantaneously.
+\Ceu\ is a reactive synchronous language for the development of safe
+concurrent programs. The language offers high-level programming constructs
+to for event synchronization (\ceulst{await}, \ceulst{emit}) and the
+composition of concurrent lines of execution (\ceulst{par},
+\ceulst{par/and}, \ceulst{par/or}).
 
-The \Ceu\ program depicted in Listing~\ref{lst:ceu-LEDs} illustrates these
-concepts. This program blinks two LEDs, \ceu{Led1} and
-\ceu{Led2}, by changing their state (on or off) every couple of seconds.
-When the program starts, the LEDs go on blinking until a key is pressed,
-i.e., event \ceu{KEY} occurs, at which point the program terminates.
+\Ceu\ programs depend on an external environment that provides it input
+events.  Due to the language reactive nature, programs constantly reacts to
+these external input events in a process called reaction.  Due to the
+language synchronous nature, reactions are conceptually instantaneous, which
+means that conceptually \Ceu\ programs are always awaiting for events and
+react instantaneously.  Moreover, as detailed in \Cref{sec:sem}, \Ceu\
+programs always behave deterministically: a program always reaches the same
+final state when fed with the same sequence of external input events and
+initial state.
+
+The \Ceu\ program depicted in \Cref{lst:ceu-LEDs} illustrates these
+concepts.  This program blinks two LEDs, \ceulst{Led1} and \ceulst{Led2}, by
+changing their state (on or off) every couple of seconds.  When the program
+starts, the LEDs go on blinking until a key is pressed, i.e., event
+\ceulst{KEY} occurs, at which point the program terminates.
 
 \begin{lstlisting}[
   language={ceu-display},
-  caption={Blinking LEDs in~CÉU.},
+  caption={Blinking LEDs in~\Ceu.},
   label={lst:ceu-LEDs}]
 input void KEY;
 par/or
 do                 /* trail 1 */
   loop do
     await 2s;
-    _Led1_on()
+    _Led1_on ();
     await 2s;
-    _Led1_off()
+    _Led1_off ();
   end
 with               /* trail 2 */
   loop do
     await 4s;
-    _Led2_on()
+    _Led2_on ();
     await 4s;
-    _Led2_off()
+    _Led2_off ();
   end
 with               /* trail 3 */
   await KEY;
 end
 \end{lstlisting}
 
-Line~1 declares the input event KEY (input events are emitted by the
-environment). Lines~2--19 define a parallel composition with three lines of
-exection (\emph{trails} in \ceu\ terminology). First trail~(lines~3--9)
-in loop awaits 2 seconds, turns \emph{Led1} on, awaits 2 seconds and turns
-\emph{Led1} off. Second trail~(lines~11--16) is analogous to the first, but
-awaits 4 seconds before turning \emph{Led2} on and off. Finally, last
-trail~(line~18) awaits for the KEY event before terminate. \ceulst{par/or}
-compositions finish when any of its trails finish (\ceulst{par/and}
-compositions finish when all of its trails finish and \ceulst{par}
-compositions never finish). Thus, this program finishes when the input event
-KEY is emitted by the environment.
+Line~1 of \Cref{lst:ceu-LEDs} declares the eternal input event \ceulst{KEY}.
+Lines~2--19 define a parallel composition with three lines of execution,
+which are called \emph{trails} in \Ceu\ terminology.  The first
+trail~(lines~3--9) runs an infinite loop that awaits~2 seconds, turns
+\ceulst{Led1} on, awaits~2 more seconds and turns \ceulst{Led1} off.  The
+second trail~(lines~11--16) is similar, but awaits~4 seconds before turning
+\ceulst{Led2} on and off.  The last trail~(line~18) simply awaits the
+\ceulst{KEY} and terminates.
 
-\Ceu\ allows communication between trails through internal events.
-To illustrate, consider Listing~\ref{lst:ceu-internal}. This program has
-a \ceulst{par/or} composition with three trails. The first one~(lines~4--8)
-awaits the external event A, performs some computation and then emits
-the internal event b~(line~7). At this point, the first trail
-halts and the execution moves to the second trail~(lines~9--12) which
-is awaiting for the internal event b~(line~10).  Second trail performs
-some computation and then emits the internal event c~(line~12). Now second
-trail halts and the execution moves to the third trail~(lines~13--17) which
-is awaiting for the internal event c~(line~15). Third trail performs some
-computation and then halts awaiting for another occurrence of event c. At
-this point the execution of second trail is resumed and, as there is nothing
-left to execute in that trail, it finishes leading to the end of the
-\ceulst{par/or} composition. Note that because the composition finishes,
-the first trail never has the chance to be resumed and perform the
-computation in line~8.
+Since the three trails run in a \ceulst{par/or} composition (lines~2--19),
+the composition itself will finish when any of the child trails finishes.
+Thus the program of \Cref{lst:ceu-LEDs} finishes when a input event
+\ceulst{KEY} is received from the environment.  (\Ceu\ also has a
+\ceulst{par/and} composition, which finish when all of its trails finish,
+and a \ceulst{par} composition, which never finishes.)
+
+In \Ceu, program trails communicate through internal events, as illustrated
+by \Cref{lst:ceu-internal}.  The program of \Cref{lst:ceu-internal} consists
+of a single \ceulst{par/or} composition with three trails.  The first trail
+(lines~4--8) awaits the external event~\ceulst{A}, executes some
+non-blocking code, and then emits the internal event~\ceulst{b}~(line~7).
+At this point, the first trail blocks and the second trail~(lines~9--12),
+which is awaiting the internal event~\ceulst{b}~(line~10), is awaken.
+
+As soon as it wakes up, the second trail executes some non-blocking code and
+emits the internal event~\ceulst{c}~(line~12).  It then halts and the third
+trail~(lines~13--17), which is awaiting the internal event c~(line~15), is
+awaken.  The third trail, in turn, executes some non-blocking code and
+blocks waiting for another occurrence of event~\ceulst{c}.  At this point,
+the execution of second trail is resumed and, as there is nothing left to
+execute in that trail, it finishes killing the \ceulst{par/or} composition.
+Note that because the whole composition is terminated, the first trail will
+never wake up and reach line~8.
 
 \begin{lstlisting}[
   language={ceu-display},
-  caption={Trails communicating through internal events.},
+  caption={Three trails communicating through internal events.},
   label={lst:ceu-internal}]
 input void A;
 event void b;
@@ -312,7 +328,7 @@ par/or do
   await A;
   <...>
   emit b;
-  <...>     /* code never executed */
+  <...>     /* unreachable */
 with
   await b;
   <...>
@@ -323,41 +339,38 @@ with
     <...>
   end
 end
-<...>
 \end{lstlisting}
 
-\Ceu\ has a deterministic semantics (discussed below), which means that
-programs always produces the same output and executes the same steps for a
-given sequence of external events.
+\Ceu\ also implements the notion of safe trail abortion, or finalization.
+The \ceulst{finalize} instruction executes immediately after its associated
+trail finishes, either naturally or by abrupt abortion, e.g., due to the
+execution of \ceulst{break} instruction within the body of a~\ceulst{loop}.
+\Cref{lst:ceu-finalize} depicts a program containing a \ceulst{finalize}
+statement.
 
-Finally, \Ceu\ implements the notion of safe abort with finalizations. A
-finalization statement executes when its associated block finishes (either
-naturally or by abrupt abortion --- e.g., a \ceulst{break} within
-a \ceulst{loop}). To illustrate, consider the Listing~\ref{lst:ceu-finalize}.
 \begin{lstlisting}[
   language={ceu-display},
-  caption={Finalize block},
+  caption={A program containing a finalize instruction.},
   label={lst:ceu-finalize}]
 par/or do
   var _buffer_t msg;
   <...>                       /* prepares msg */
   do
-    _send_request(&&msg);
+    _send_request (&&msg);
   finalize with
-    _send_cancel(&&msg);
+    _send_cancel (&&msg);
   end
-  await SEND_ACK;             /* transmission is complete */
+  await SEND_ACK;             /* transmission done */
 with
   await 50ms;
 end
 \end{lstlisting}
 
-In this listing, the \ceulst{finalize} block~(lines~6--8) executes when
-the first trail~(lines~1--9) finishes. Thus, in this example, the process
-of sending the request in variable \emph{msg} is properly cancelled
-(by calling the \_send\_cancel() function) if the request takes more
-then 50ms to complete (i.e., the second trail finishes).
-
+In \Cref{lst:ceu-finalize}, the \ceulst{finalize} block~(lines~6--8)
+executes when the first trail~(lines~1--9) finishes.  Thus the process of
+sending the request in variable \ceulst{msg} is properly canceled (by
+calling the \ceulst{\_send\_cancel} function) if the request takes more then
+50ms to complete, i.e., the second trail finishes.
 
 
 \section{Formal semantics}
@@ -441,7 +454,8 @@ relation~$\innersym$ can only relate configurations with the same~$n$, we
 write
 \[
   \<p,\alpha,m>\inner{n}\<p',\alpha',m'>
-  \equiv\<p,\alpha,m,n>\innerbin\<p',\alpha',m',n>.
+  \quad\text{iff}\quad
+  \<p,\alpha,m,n>\innerbin\<p',\alpha',m',n>.
 \]
 
 Before defining the inner-step relation, we need to define the auxiliary
@@ -453,9 +467,9 @@ that determines if all trails of a program~$p$ are blocked on a given event
 stack and reaction number.  And the~$\clear$ function extracts the body of
 active~$\ceu{\Fin}$ blocks from a given program.
 
-In the following definitions, expressions of the form~$\|\alpha|$ denote the
-length of event stack~$\alpha$ and the operator~$\cdot$ denotates the
-multiplication operation in ${N}$.
+Functions~$\blocked$ and~$\clear$ are formally defined next.  In the
+definitions, expressions of the form~$\|\alpha|$ denote the length of event
+stack~$\alpha$ and the operator~$\cdot$ denotes multiplication on~$N$.
 
 \begin{definition}[label={def:sem:blocked}]
   Function~$\blocked\colon{P\times{E^*}\times{N}}\to\{0,1\}$ is defined
@@ -560,8 +574,6 @@ multiplication operation in ${N}$.
     &=\clear(p_1)
   \end{align*}
 \end{definition}
-
-The reaction inner-step relation is defined next.
 
 \begin{definition}[label={def:sem:inner},name={Reaction inner-step}]
   Relation~$\innersym\subseteq\Delta\times\Delta$ is defined inductively as
@@ -1069,18 +1081,50 @@ The next theorem establishes that, for any initial configuration, an
     \exists\delta_\Houter\in\Delta(\<p,\alpha,m>\innerx{n}\delta).
   \]
 \end{restatable}
-\begin{proof}
-  By induction on~$\|\alpha|$.  See
-  page~\pageref{proof:thm:sem:outerx:exhaust}.
+\begin{proof}[Proof idea]
+  We are still working on this proof.  The basic idea is that at each outer
+  step either: the stack becomes smaller or it grows by at most the number
+  of \ceu{\Emit{e}} instructions consumed (in the step) minus one.  As the
+  number of \ceu{\Emit(e)} instructions in the program fixed and finite, and
+  as each outer step consumes at least one of them or reaches an
+  inner-irreducible configuration, eventually the stack becomes empty.
 \end{proof}
 
-
-\subsection{The complete reaction}
-\label{sec:sem:react}
+From the reaction outer-multi-step relation we define the outer-reaction
+operation~($\Router$), which implements a full program reaction.  By the
+previous theorems, each such reaction is deterministic an always terminates,
+which are the main properties of the semantics proposed in this report.
+
+\begin{definition}[name={Outer reaction},label={def:outer:R}]
+  For all~$\delta$, $\delta'\in\Delta$,
+  \[
+    \Router(\delta)=\delta'
+    \quad\text{iff}\quad
+    \delta\innerx{}\delta'
+    \enspace\text{and}\enspace
+    \delta'_\Houter.
+  \]
+  We write~$\Router[n]$ to indicate that the reaction number on both sides
+  is~$n$.
+\end{definition}
 
 
-\section{Final remarks and future work}
+\section{Conclusion}
 \label{sec:final}
+
+In this report, we presented a deterministic and terminating semantics for
+the synchronous programming language \Ceu.  We still have to complete the
+proof of \Cref{thm:sem:outerx:exhaust}, the main result of the report, which
+will probably lead to the inclusion of new lemmas.
+
+As potential future work we include: (i)~the definition of program
+equivalence via operation~$\Router$ and the investigation of interesting
+reduction procedures for programs; (ii)~the inclusion of the distinction
+between internal and external events; (iii)~the removal of the restriction
+that (internal) \ceu{\Await{e}} instructions cannot awake in the same
+reaction they were executed, which is relatively new feature of the
+language; and~(iv) the comparison of this semantics with that of other
+imperative synchronous languages such as~Esterel.
 
 
 \appendix
@@ -1595,9 +1639,9 @@ The next theorem establishes that, for any initial configuration, an
     %%
   \item Again, for the sake of a contradiction, suppose there is are~$j<i$
     and~$\delta''_\Hinner\in\Delta$ such that~$\delta\inner[j]{n}\delta''$.
-    Then by \cref{lem:sem:inneri:irr-unique:1}, since~$i>j$, $\delta'$
-    could not exist, which is an absurd.  Therefore, our assumption that there
-    is such~$j$ is false.\qedhere
+    Then by \cref{lem:sem:inneri:irr-unique:1}, since~$i>j$, $\delta'$ could
+    not exist, which is an absurd.  Therefore, our assumption that there is
+    such~$j$ is false.\qedhere
   \end{enumerate}
 \end{proof}
 
@@ -2152,46 +2196,7 @@ The next theorem establishes that, for any initial configuration, an
   \item$p'=\ceu{\Skip,\Break}$.  By rule~\eqref{def:sem:outer:empty},
     $\delta\outeri{n}\<p',\nil,m'>=\delta'$.
   \item$\blocked(p',\alpha',n)$.  By rule~\eqref{def:sem:outer:pop},
-    $\delta\outeri{n}\<p',\pop(\alpha),m'>=\delta'$.
-  \end{case}
-\end{proof}
-
-
-\thmsemouterxexhaust*
-\begin{proof}\label{proof:thm:sem:outerx:exhaust}
-  Let~$\<p,\alpha,m,n>\in\Delta$.  Then
-  \[
-    \Rinner[n](p,\alpha,m)=\<p',\alpha',m'>_\Hinner,
-  \]
-  and by \Cref{def:sem:outer},
-  \begin{alignat}{2}
-    \label{proof:thm:sem:outerx:exhaust:1}
-    \<p,\alpha,m>&\outeri[1]{n}\<p',\nil,m'>
-    &\qquad\text{if~$p'=\ceu{\Skip,\Break}$, or}\\
-    %%
-    \label{proof:thm:sem:outerx:exhaust:2}
-    \<p,\alpha,m>&\outeri[1]{n}\<p',\pop(\alpha'),m'>
-    &\qquad\text{if~$\blocked(p',\alpha',n)=1$}
-  \end{alignat}
-  We proceed by induction on~$\|\alpha|$.
-  \begin{case}
-  \item$\alpha=\nil$.  Then either~\eqref{proof:thm:sem:outerx:exhaust:1}
-    or~\eqref{proof:thm:sem:outerx:exhaust:1}.  In both cases,
-    $\delta=\<p',\nil,m'>$.
-  \item$\alpha=e\alpha_1\dots\alpha_k$.
-    If~\eqref{proof:thm:sem:outerx:exhaust:1}, then
-    $\delta=\<p',\nil,m'>$.  If~\eqref{proof:thm:sem:outerx:exhaust:2}, then
-    \[
-      \<p,\alpha,m>\outeri[1]{n}\<p',\alpha_1\dots\alpha_k,m'>.
-    \]
-    By induction hypothesis,
-    \[
-      \<p',\alpha_1\dots\alpha_k,m'>\outerx{n}\<p'',\nil,m''>_\Hinner,
-    \]
-    for some~$p''\in{P}$ and~$m''\in{N}$.  Thus
-    \[
-      \<p,\alpha,m>\outerx{n}\<p'',\nil,m''>=\delta.\qedhere
-    \]
+    $\delta\outeri{n}\<p',\pop(\alpha),m'>=\delta'$.\qedhere
   \end{case}
 \end{proof}
 \end{document}
