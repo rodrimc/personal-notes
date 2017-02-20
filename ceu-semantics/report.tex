@@ -1535,8 +1535,9 @@ The next theorem establishes that, for any initial configuration, an
     %%
   \item$p=p';p''$.
     \begin{case}
-    \item$p'=\ceu{\Skip}$.  By rule~\eqref{def:sem:inner:seq-skip}
-      and by induction hypothesis,
+    \item\label{proof:thm:sem:innerx:exhaust:skip-seq}
+      $p'=\ceu{\Skip}$.  By rule~\eqref{def:sem:inner:seq-skip} and by
+      induction hypothesis,
       \[
         \<\ceu{\Skip};p'',\alpha,m>
         \inner[1]{n}\<p'',\alpha,m>
@@ -1544,7 +1545,8 @@ The next theorem establishes that, for any initial configuration, an
       \]
       where~$p_2''=\ceu{\Skip,\Break}$ or~$\blocked(p_2'',\alpha',n)=1$.
       %%
-    \item$p'=\ceu{\Break}$.  By rule~\eqref{def:sem:inner:seq-break},
+    \item\label{proof:thm:sem:innerx:exhaust:break-seq}
+    $p'=\ceu{\Break}$.  By rule~\eqref{def:sem:inner:seq-break},
       \[
         \<\ceu{\Break};p'',\alpha,m>
         \inner[1]{n}\<\ceu{\Break},\alpha,m>=\delta.
@@ -1570,25 +1572,27 @@ The next theorem establishes that, for any initial configuration, an
         \]
         Thus~$\delta=\<p_1';p'',\alpha',m'>$.
         %%
-      \item$p_1'=\ceu{\Break}$.
-        From~\eqref{proof:thm:sem:innerx:exhaust:1},
-        by rule~\eqref{def:sem:inner:seq-break},
-        \[
-          \<p';p'',\alpha,m>
-          \innerx{n}\<\ceu{\Break};p'',\alpha',m'>
-          \inner[1]{n}\<\ceu{\Break},\alpha',m'>=\delta.
-        \]
-        %%
       \item$p_1'=\ceu{\Skip}$.
         From~\eqref{proof:thm:sem:innerx:exhaust:1},
-        by rule~\eqref{def:sem:inner:seq-skip} and by
-        induction hypothesis,
+        % by rule~\eqref{def:sem:inner:seq-skip} and by
+        % induction hypothesis,
         \[
           \<p';p'',\alpha,m>
-          \innerx{n}\<\ceu{\Skip};p'',\alpha',m'>
-          \inner[1]{n}\<p'',\alpha',m'>
-          \innerx{n}\<p_2'',\alpha'',m''>=\delta.
+          \innerx{n}\<\ceu{\Skip};p'',\alpha',m'>,
+          % \inner[1]{n}\<p'',\alpha',m'>
+          % \innerx{n}\<p_2'',\alpha'',m''>=\delta.
         \]
+        then this case becomes~\Cref{proof:thm:sem:innerx:exhaust:skip-seq}.
+        %%
+      \item$p_1'=\ceu{\Break}$.
+        From~\eqref{proof:thm:sem:innerx:exhaust:1},
+        % by rule~\eqref{def:sem:inner:seq-break},
+        \[
+          \<p';p'',\alpha,m>
+          \innerx{n}\<\ceu{\Break};p'',\alpha',m'>,
+          % \inner[1]{n}\<\ceu{\Break},\alpha',m'>=\delta.
+        \]
+        then this case becomes~\Cref{proof:thm:sem:innerx:exhaust:break-seq}.
       \end{case}
     \end{case}
       %%
